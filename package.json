@@ -1,0 +1,9 @@
+{
+  "dependencies": {
+    "express": "^5.1.0",
+    "express-handlebars": "^8.0.1",
+    "express-session": "^1.18.2",
+    "mongodb": "^7.0.0",
+    "prompt-sync": "^4.2.0"
+  }
+}
