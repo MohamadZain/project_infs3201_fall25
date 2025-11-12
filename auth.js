@@ -1,59 +1,80 @@
-const fs = require('fs/promises')
-const path = require('path')
+const { MongoClient } = require('mongodb');
+const crypto = require('crypto');
 
-const usersFile = path.join(__dirname, 'users.json')
+const uri = 'mongodb+srv://student:12class34@cluster1.sjh42tn.mongodb.net/'; // Change if needed
+const dbName = 'infs3201_fall2025';            // Adjust to your DB name
+const client = new MongoClient(uri);
 
-async function getAllUsers() {
-    try {
-        const data = await fs.readFile(usersFile, 'utf-8')
-        return JSON.parse(data)
-    } catch (err) {
-        return []
-    }
+// Helper: Hash password with a given salt
+function hashPassword(password, salt) {
+    return crypto.createHash('sha256').update(password + salt).digest('hex');
 }
 
-async function verifyUser(username, password) {
-    const users = await getAllUsers()
-    const user = users.find(u => u.username === username && u.password === password)
-    
-    if (user) {
-        return {
-            id: user.id,
-            username: user.username
-        }
-    }
-    return null
+async function getCollection() {
+    await client.connect();
+    const db = client.db(dbName);
+    return db.collection('users');
 }
 
+// --- REGISTER USER ---
 async function registerUser(name, email, username, password) {
-    const users = await getAllUsers()
-    
-    if (users.some(u => u.username === username || u.email === email)) {
-        return { success: false, message: 'Username or email already exists' }
+    const users = await getCollection();
+
+    const existing = await users.findOne({ username });
+    if (existing) {
+        return { success: false, message: 'Username already exists.' };
     }
 
-    const newUser = {
-        id: users.length > 0 ? users[users.length - 1].id + 1 : 1,
+    const salt = crypto.randomBytes(16).toString('hex');
+    const hashedPassword = hashPassword(password, salt);
+
+    const user = {
         name,
         email,
         username,
-        password
-    }
-    users.push(newUser)
+        password: hashedPassword,
+        salt,
+        createdAt: new Date()
+    };
 
-    await fs.writeFile(usersFile, JSON.stringify(users, null, 2))
-    
-    return { 
-        success: true, 
-        user: { 
-            id: newUser.id, 
-            username: newUser.username 
-        } 
-    }
+    await users.insertOne(user);
+
+    return { success: true, user };
 }
 
-module.exports = {
-    getAllUsers,
-    verifyUser,
-    registerUser
+// --- VERIFY USER (LOGIN) ---
+async function verifyUser(username, password) {
+    const users = await getCollection();
+
+    const user = await users.findOne({ username });
+    if (!user) return null;
+
+    // Handle old users without salt (optional migration)
+    if (!user.salt) {
+        // If the stored password matches plaintext
+        if (user.password === password) {
+            const newSalt = crypto.randomBytes(16).toString('hex');
+            const newHashed = hashPassword(password, newSalt);
+
+            await users.updateOne(
+                { username },
+                { $set: { password: newHashed, salt: newSalt } }
+            );
+
+            user.password = newHashed;
+            user.salt = newSalt;
+        } else {
+            // Password doesn't match even plaintext
+            return null;
+        }
+    }
+
+    const hashedInput = hashPassword(password, user.salt);
+    if (hashedInput === user.password) {
+        return user;
+    }
+
+    return null;
 }
+
+module.exports = { registerUser, verifyUser };
