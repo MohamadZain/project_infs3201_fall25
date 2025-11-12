@@ -73,14 +73,13 @@ async function getPhotosInAlbum(albumId) {
  * @param {*} description 
  * @returns true if the photo was updated, false otherwise
  */
-async function updatePhoto(pid, title, description) {
+async function updatePhoto(pid, title, description, visibility) {
     await connectDatabase()
     let res = await photoCollection.updateOne(
-        {id:pid}, 
-        {$set: {title:title, description: description}
-    })
-    return res.modifiedCount == 1
-
+        {id: pid},
+        {$set: {title, description, visibility}}
+    )
+    return res.modifiedCount === 1
 }
 
 /**

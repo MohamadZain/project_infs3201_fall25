@@ -71,17 +71,30 @@ app.post('/register', async (req, res) => {
     }
 })
 
-// --- Album & Photo Routes --- (Add ensureLogin to all routes that require login)
+// --- Album & Photo Routes ---
 app.get('/album/:aid', ensureLogin, async (req, res) => {
     let albumId = Number(req.params.aid)
     let albumDetails = await business.getAlbumDetails(albumId)
     let photoList = await business.getPhotosInAlbum(albumId)
-    res.render('album', { album: albumDetails, photos: photoList, user: req.session.user, layout: undefined })
+
+    let visiblePhotos = []
+    for (let photo of photoList) {
+        if (photo.visibility !== "private" || photo.owner === req.session.user.id) {
+            visiblePhotos.push(photo)
+        }
+    }
+
+    res.render('album', { album: albumDetails, photos: visiblePhotos, user: req.session.user, layout: undefined })
 })
 
 app.get('/photo-details/:pid', ensureLogin, async (req, res) => {
     let photoId = Number(req.params.pid)
     let photoDetails = await business.getPhotoDetails(photoId)
+
+    if (photoDetails.visibility === "private" && photoDetails.owner !== req.session.user.id) {
+        return res.send("This photo is private.")
+    }
+
     res.render('view_photo', { photo: photoDetails, user: req.session.user, layout: undefined })
 })
 
@@ -89,10 +102,29 @@ app.get('/edit-photo', ensureLogin, async (req, res) => {
     let photoId = Number(req.query.pid)
     let photoDetails = await business.getPhotoDetails(photoId)
 
-    // Only owner can edit
-    if (photoDetails.ownerId !== req.session.user.id) {
+    if (photoDetails.owner !== req.session.user.id) {
         return res.send('You are not allowed to edit this photo')
     }
+
+    // LEVEL 1: Set default visibility
+    let visibility = "private"
+    if (photoDetails.visibility === "public") {
+        visibility = "public"
+    } else if (!photoDetails.visibility) {
+        visibility = "public"
+    }
+
+    // LEVEL 1: Set select options
+    let selectPrivate = ""
+    let selectPublic = ""
+    if (visibility === "private") {
+        selectPrivate = "selected"
+    } else {
+        selectPublic = "selected"
+    }
+
+    photoDetails.selectPrivate = selectPrivate
+    photoDetails.selectPublic = selectPublic
 
     res.render('edit_photo', { photo: photoDetails, user: req.session.user, layout: undefined })
 })
@@ -101,15 +133,18 @@ app.post('/edit-photo', ensureLogin, async (req, res) => {
     let photoId = Number(req.body.id)
     let photoDetails = await business.getPhotoDetails(photoId)
 
-    // Only owner can update
-    if (photoDetails.ownerId !== req.session.user.id) {
+    if (photoDetails.owner !== req.session.user.id) {
         return res.send('You are not allowed to edit this photo')
     }
 
-    let description = req.body.description
     let title = req.body.title
-    await business.updatePhoto(photoId, title, description)
+    let description = req.body.description
+    let visibility = req.body.visibility  // ← comes from <select>
+
+    await business.updatePhoto(photoId, title, description, visibility)
     res.redirect(`/photo-details/${photoId}`)
 })
 
-app.listen(8000, () => console.log('Server started on port 8000'))
+app.listen(8000, () => {
+    console.log('Server started on port 8000')
+})

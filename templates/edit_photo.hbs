@@ -3,5 +3,14 @@
     <input name="id" value="{{photo.id}}" type="hidden">
     Title: <input name="title" value="{{photo.title}}"><br>
     Description: <input name="description" value="{{photo.description}}"><br>
-    <input type="submit">
+
+    <label>
+        Visibility:
+        <select name="visibility">
+            <option value="private" {{photo.selectPrivate}}>Private</option>
+            <option value="public" {{photo.selectPublic}}>Public</option>
+        </select>
+    </label><br>
+
+    <input type="submit" value="Save">
 </form>

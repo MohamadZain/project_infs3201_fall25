@@ -3,7 +3,6 @@ const path = require('path')
 
 const usersFile = path.join(__dirname, 'users.json')
 
-// Read all users from the JSON file
 async function getAllUsers() {
     try {
         const data = await fs.readFile(usersFile, 'utf-8')
@@ -13,17 +12,22 @@ async function getAllUsers() {
     }
 }
 
-// Verify user login credentials
 async function verifyUser(username, password) {
     const users = await getAllUsers()
-    return users.find(u => u.username === username && u.password === password)
+    const user = users.find(u => u.username === username && u.password === password)
+    
+    if (user) {
+        return {
+            id: user.id,
+            username: user.username
+        }
+    }
+    return null
 }
 
-// Register a new user
 async function registerUser(name, email, username, password) {
     const users = await getAllUsers()
     
-    // Check if username or email already exists
     if (users.some(u => u.username === username || u.email === email)) {
         return { success: false, message: 'Username or email already exists' }
     }
@@ -38,7 +42,14 @@ async function registerUser(name, email, username, password) {
     users.push(newUser)
 
     await fs.writeFile(usersFile, JSON.stringify(users, null, 2))
-    return { success: true, user: newUser }
+    
+    return { 
+        success: true, 
+        user: { 
+            id: newUser.id, 
+            username: newUser.username 
+        } 
+    }
 }
 
 module.exports = {
