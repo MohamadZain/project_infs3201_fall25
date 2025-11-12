@@ -8,5 +8,12 @@
     "id": 2,
     "username": "fatima",
     "password": "mysecurepwd"
+  },
+  {
+    "id": 3,
+    "name": "Zain",
+    "email": "deadghoulwins@gmail.com",
+    "username": "Zain",
+    "password": "1234"
   }
 ]
