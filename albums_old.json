@@ -1,0 +1,72 @@
+[
+  {
+    "id": 201,
+    "name": "Beach Vacations",
+    "description": "Photos taken during various beach trips."
+  },
+  {
+    "id": 202,
+    "name": "Family",
+    "description": "Family gatherings and celebrations."
+  },
+  {
+    "id": 203,
+    "name": "Hiking",
+    "description": "Photos from hiking adventures."
+  },
+  {
+    "id": 204,
+    "name": "Work Events",
+    "description": "Memories from different office events."
+  },
+  {
+    "id": 205,
+    "name": "Friends",
+    "description": "Moments with friends over the years."
+  },
+  {
+    "id": 206,
+    "name": "Food",
+    "description": "Tasty dishes and food experiments."
+  },
+  {
+    "id": 207,
+    "name": "Travel",
+    "description": "Photos from travels around the world."
+  },
+  {
+    "id": 208,
+    "name": "Pets",
+    "description": "Our furry friends doing cute things."
+  },
+  {
+    "id": 209,
+    "name": "Art",
+    "description": "Artwork and creative projects."
+  },
+  {
+    "id": 210,
+    "name": "Sports",
+    "description": "Sports activities and events."
+  },
+  {
+    "id": 211,
+    "name": "Weddings",
+    "description": "Wedding celebrations."
+  },
+  {
+    "id": 212,
+    "name": "Gardening",
+    "description": "Plants, flowers, and garden projects."
+  },
+  {
+    "id": 213,
+    "name": "Unsorted",
+    "description": "Miscellaneous photos not yet categorized."
+  },
+  {
+    "id": 214,
+    "name": "Architecture",
+    "description": "Interesting buildings and structures."
+  }
+]
