@@ -79,7 +79,7 @@ app.get('/album/:aid', ensureLogin, async (req, res) => {
 
     let visiblePhotos = []
     for (let photo of photoList) {
-        if (photo.visibility !== "private" || photo.owner === req.session.user.id) {
+        if (photo.visibility !== "private" || photo.owner === req.session.user.username) {
             visiblePhotos.push(photo)
         }
     }
@@ -91,21 +91,25 @@ app.get('/photo-details/:pid', ensureLogin, async (req, res) => {
     let photoId = Number(req.params.pid)
     let photoDetails = await business.getPhotoDetails(photoId)
 
-    if (photoDetails.visibility === "private" && photoDetails.owner !== req.session.user.id) {
+    if (photoDetails.visibility === "private" && photoDetails.owner !== req.session.user.username) {
         return res.send("This photo is private.")
     }
 
     res.render('view_photo', { photo: photoDetails, user: req.session.user, layout: undefined })
 })
 
+
 app.get('/edit-photo', ensureLogin, async (req, res) => {
     let photoId = Number(req.query.pid)
     let photoDetails = await business.getPhotoDetails(photoId)
 
-    if (photoDetails.owner !== req.session.user.id) {
+    console.log('photo owner:', photoDetails.owner)
+    console.log('logged in user:', req.session.user.username)
+
+    if (photoDetails.owner !== req.session.user.username) {
         return res.send('You are not allowed to edit this photo')
     }
-
+    
     // LEVEL 1: Set default visibility
     let visibility = "private"
     if (photoDetails.visibility === "public") {
@@ -126,14 +130,15 @@ app.get('/edit-photo', ensureLogin, async (req, res) => {
     photoDetails.selectPrivate = selectPrivate
     photoDetails.selectPublic = selectPublic
 
-    res.render('edit_photo', { photo: photoDetails, user: req.session.user, layout: undefined })
+    res.render('edit_photo', { photo: photoDetails, user: req.session.user.username, layout: undefined })
 })
 
 app.post('/edit-photo', ensureLogin, async (req, res) => {
     let photoId = Number(req.body.id)
     let photoDetails = await business.getPhotoDetails(photoId)
 
-    if (photoDetails.owner !== req.session.user.id) {
+    
+    if (photoDetails.owner !== req.session.user.username) {
         return res.send('You are not allowed to edit this photo')
     }
 
