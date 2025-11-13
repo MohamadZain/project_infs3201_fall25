@@ -1,4 +1,3 @@
-// webapp.js
 const express = require('express')
 const handlebars = require('express-handlebars')
 const crypto = require('crypto')
@@ -8,20 +7,30 @@ const auth = require('./auth')
 
 const app = express()
 
-// --- Handlebars setup ---
+/**
+ * Handlebars setup
+ */
 app.set('views', __dirname + "/templates")
 app.set('view engine', 'hbs')
 app.engine('hbs', handlebars.engine())
 
-// --- Middleware ---
+/**
+ * Middleware for parsing URL-encoded bodies and serving static files
+ */
 app.use(express.urlencoded({ extended: true }))
 app.use('/static', express.static(__dirname + "/static"))
 app.use('/photos', express.static(__dirname + "/photos"))
 
-// --- In-memory login store ---
+/**
+ * In-memory login store
+ */
 const loggedInUsers = {}
 
-// --- Manual cookie parser ---
+/**
+ * Parse cookies from the request
+ * @param {Object} req - Express request object
+ * @returns {Object} Parsed cookies as key-value pairs
+ */
 function parseCookies(req) {
     const list = {}
     const rc = req.headers.cookie
@@ -34,7 +43,12 @@ function parseCookies(req) {
     return list
 }
 
-// --- Middleware to check login ---
+/**
+ * Middleware to ensure user is logged in
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @param {Function} next - Next middleware
+ */
 function ensureLogin(req, res, next) {
     const cookies = parseCookies(req)
     const sessionID = cookies.sessionID
@@ -45,17 +59,24 @@ function ensureLogin(req, res, next) {
     next()
 }
 
-// --- Homepage ---
+/**
+ * Homepage route
+ */
 app.get('/', ensureLogin, async (req, res) => {
     let albumList = await business.getAlbums()
     res.render('index', { albums: albumList, user: req.user, layout: undefined })
 })
 
-// --- Login Routes ---
+/**
+ * Login page route
+ */
 app.get('/login', (req, res) => {
     res.render('login', { layout: undefined })
 })
 
+/**
+ * Login POST handler
+ */
 app.post('/login', async (req, res) => {
     const { username, password } = req.body
     const user = await auth.verifyUser(username, password)
@@ -69,7 +90,9 @@ app.post('/login', async (req, res) => {
     }
 })
 
-// --- Logout ---
+/**
+ * Logout route
+ */
 app.get('/logout', (req, res) => {
     const cookies = parseCookies(req)
     const sessionID = cookies.sessionID
@@ -78,11 +101,16 @@ app.get('/logout', (req, res) => {
     res.redirect('/login')
 })
 
-// --- Register ---
+/**
+ * Register page route
+ */
 app.get('/register', (req, res) => {
     res.render('register', { layout: undefined })
 })
 
+/**
+ * Register POST handler
+ */
 app.post('/register', async (req, res) => {
     const { name, email, username, password } = req.body
     const result = await auth.registerUser(name, email, username, password)
@@ -96,7 +124,9 @@ app.post('/register', async (req, res) => {
     }
 })
 
-// --- Album & Photo ---
+/**
+ * Album page route
+ */
 app.get('/album/:aid', ensureLogin, async (req, res) => {
     let albumId = Number(req.params.aid)
     let albumDetails = await business.getAlbumDetails(albumId)
@@ -111,6 +141,9 @@ app.get('/album/:aid', ensureLogin, async (req, res) => {
     })
 })
 
+/**
+ * Photo details page route
+ */
 app.get('/photo-details/:pid', ensureLogin, async (req, res) => {
     let photoId = Number(req.params.pid)
     let photoDetails = await business.getPhotoDetails(photoId)
@@ -120,13 +153,17 @@ app.get('/photo-details/:pid', ensureLogin, async (req, res) => {
         return res.send("This photo is private.")
     }
 
-    // Get comments
+    /**
+     * Get comments for the photo
+     */
     const comments = await business.getComments(photoId)
 
     res.render('view_photo', { photo: photoDetails, user: req.user, comments, layout: undefined })
 })
 
-// --- Add comment ---
+/**
+ * Add comment to a photo
+ */
 app.post('/photo-details/:pid/comment', ensureLogin, async (req, res) => {
     let photoId = Number(req.params.pid)
     const text = req.body.text
@@ -136,7 +173,9 @@ app.post('/photo-details/:pid/comment', ensureLogin, async (req, res) => {
     res.redirect(`/photo-details/${photoId}`)
 })
 
-// --- Edit photo ---
+/**
+ * Edit photo page route
+ */
 app.get('/edit-photo', ensureLogin, async (req, res) => {
     let photoId = Number(req.query.pid)
     let photoDetails = await business.getPhotoDetails(photoId)
@@ -159,6 +198,9 @@ app.get('/edit-photo', ensureLogin, async (req, res) => {
     res.render('edit_photo', { photo: photoDetails, user: req.user.username, layout: undefined })
 })
 
+/**
+ * Edit photo POST handler
+ */
 app.post('/edit-photo', ensureLogin, async (req, res) => {
     let photoId = Number(req.body.id)
     let photoDetails = await business.getPhotoDetails(photoId)
@@ -175,7 +217,9 @@ app.post('/edit-photo', ensureLogin, async (req, res) => {
     res.redirect(`/photo-details/${photoId}`)
 })
 
-// --- Start server ---
+/**
+ * Start the Express server
+ */
 app.listen(8000, () => {
     console.log('Server started on port 8000')
 })

@@ -1,8 +1,4 @@
-// persistence.js
-// -----------------------------------------------------------
-// Persistence Layer
-// Direct MongoDB access only — no business logic
-// -----------------------------------------------------------
+//persistence.js
 
 const mongodb = require('mongodb')
 
@@ -10,7 +6,7 @@ let client = undefined;
 let db = undefined;
 let photoCollection = undefined;
 let albumCollection = undefined;
-let commentCollection = undefined; // NEW
+let commentCollection = undefined;
 
 /**
  * Connect to MongoDB if not already connected
@@ -22,7 +18,7 @@ async function connectDatabase() {
     db = client.db('infs3201_fall2025')
     photoCollection = db.collection('photos');
     albumCollection = db.collection('albums');
-    commentCollection = db.collection('comments'); // NEW
+    commentCollection = db.collection('comments');
 }
 
 /**
@@ -37,6 +33,8 @@ async function close() {
 
 /**
  * Get album by ID
+ * @param {number} albumId 
+ * @returns {Promise<Object|null>}
  */
 async function getAlbumDetails(albumId) {
     await connectDatabase();
@@ -45,6 +43,8 @@ async function getAlbumDetails(albumId) {
 
 /**
  * Get album by name
+ * @param {string} name 
+ * @returns {Promise<Object|null>}
  */
 async function getAlbumDetailsByName(name) {
     await connectDatabase();
@@ -53,6 +53,8 @@ async function getAlbumDetailsByName(name) {
 
 /**
  * Get photo by ID
+ * @param {number} photoId 
+ * @returns {Promise<Object|null>}
  */
 async function getPhotoDetails(photoId) {
     await connectDatabase();
@@ -61,6 +63,8 @@ async function getPhotoDetails(photoId) {
 
 /**
  * Get all photos in an album
+ * @param {number} albumId 
+ * @returns {Promise<Array>}
  */
 async function getPhotosInAlbum(albumId) {
     await connectDatabase();
@@ -70,6 +74,11 @@ async function getPhotosInAlbum(albumId) {
 
 /**
  * Update photo fields
+ * @param {number} pid 
+ * @param {string} title 
+ * @param {string} description 
+ * @param {string} [visibility] 
+ * @returns {Promise<boolean>}
  */
 async function updatePhoto(pid, title, description, visibility) {
     await connectDatabase();
@@ -84,6 +93,9 @@ async function updatePhoto(pid, title, description, visibility) {
 
 /**
  * Add tag to photo
+ * @param {number} pid 
+ * @param {string} tag 
+ * @returns {Promise<boolean>}
  */
 async function addTag(pid, tag) {
     await connectDatabase();
@@ -111,6 +123,7 @@ async function addTag(pid, tag) {
 
 /**
  * Get all albums
+ * @returns {Promise<Array>}
  */
 async function getAlbums() {
     await connectDatabase();
@@ -121,13 +134,23 @@ async function getAlbums() {
  * COMMENTS FUNCTIONS
  */
 
-// Get all comments for a photo
+/**
+ * Get all comments for a photo
+ * @param {number} photoId 
+ * @returns {Promise<Array>}
+ */
 async function getComments(photoId) {
     await connectDatabase();
     return await commentCollection.find({ photoId }).toArray();
 }
 
-// Add a comment to a photo
+/**
+ * Add a comment to a photo
+ * @param {number} photoId 
+ * @param {string} username 
+ * @param {string} text 
+ * @returns {Promise<boolean>}
+ */
 async function addComment(photoId, username, text) {
     await connectDatabase();
     const newComment = {
@@ -149,6 +172,6 @@ module.exports = {
     updatePhoto,
     addTag,
     close,
-    getComments,      // NEW
-    addComment        // NEW
+    getComments,
+    addComment
 }

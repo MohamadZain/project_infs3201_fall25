@@ -1,39 +1,41 @@
 // auth.js
-// -----------------------------------------------------------
-// This file handles user registration and login using MongoDB
-// with hashed passwords (SHA256 + salt).
-//
-// HOW TO USE:
-// 1. Replace the value of `MONGODB_URI` below with your 
-//    MongoDB Compass connection string.
-//
-// -----------------------------------------------------------
 
 const { MongoClient } = require('mongodb');
 const crypto = require('crypto');
 
-// --- ADD YOUR MONGODB COMPASS LINK HERE ---
-const MONGODB_URI = 'mongodb+srv://student:12class34@cluster1.sjh42tn.mongodb.net/'
-const dbName = 'infs3201_fall2025'; // database name
+const MONGODB_URI = 'mongodb+srv://student:12class34@cluster1.sjh42tn.mongodb.net/';
+const dbName = 'infs3201_fall2025';
 const client = new MongoClient(MONGODB_URI);
 
 let db, userCollection;
 
-// --- Connect to DB ---
+/**
+ * Connect to MongoDB if not already connected.
+ */
 async function connectDB() {
     if (!db) {
         await client.connect();
         db = client.db(dbName);
-        userCollection = db.collection('users'); // main users collection
+        userCollection = db.collection('users');
     }
 }
 
-// --- Helper: hash password with salt using SHA256 ---
+/**
+ * Hash a password with a given salt using SHA256.
+ * @param {string} password - The password to hash
+ * @param {string} salt - The salt to use
+ * @returns {string} The hashed password
+ */
 function hashPassword(password, salt) {
     return crypto.createHash('sha256').update(password + salt).digest('hex');
 }
 
-// --- Verify user login ---
+/**
+ * Verify user login credentials.
+ * @param {string} username - Username
+ * @param {string} password - Password
+ * @returns {Promise<Object|null>} User object if valid, else null
+ */
 async function verifyUser(username, password) {
     await connectDB();
     const user = await userCollection.findOne({ username });
@@ -43,31 +45,32 @@ async function verifyUser(username, password) {
     return hashed === user.password ? user : null;
 }
 
-// --- Register new user ---
-// --- Register new user (ownerId = 1,2,3... auto-increment) ---
+/**
+ * Register a new user with auto-incremented ownerID.
+ * @param {string} name - Full name
+ * @param {string} email - Email address
+ * @param {string} username - Username
+ * @param {string} password - Password
+ * @returns {Promise<Object>} Success status and message
+ */
 async function registerUser(name, email, username, password) {
     await connectDB();
 
-    // Check if username already exists
-    const existing = await userCollection.findOne({ username: username });
+    // Check for existing username
+    const existing = await userCollection.findOne({ username });
     if (existing) {
         return { success: false, message: 'Username already exists' };
     }
 
-    // --- Generate incremental ownerID (Level 1 style) ---
+    // Generate incremental ownerID
     const counterColl = db.collection('counters');
     let counterDoc = await counterColl.findOne({ _id: 'ownerID' });
 
     let ownerID;
     if (counterDoc && counterDoc.seq) {
-        // Counter exists, increment it
         ownerID = counterDoc.seq + 1;
-        await counterColl.updateOne(
-            { _id: 'ownerID' },
-            { $set: { seq: ownerID } }
-        );
+        await counterColl.updateOne({ _id: 'ownerID' }, { $set: { seq: ownerID } });
     } else {
-        // Counter missing or no seq, find max ownerID in users
         const allUsers = await userCollection.find().toArray();
         let maxID = 0;
         for (let i = 0; i < allUsers.length; i++) {
@@ -77,26 +80,21 @@ async function registerUser(name, email, username, password) {
         }
         ownerID = maxID + 1;
 
-        // Initialize counter
-        await counterColl.updateOne(
-            { _id: 'ownerID' },
-            { $set: { seq: ownerID } },
-            { upsert: true }
-        );
+        await counterColl.updateOne({ _id: 'ownerID' }, { $set: { seq: ownerID } }, { upsert: true });
     }
 
-    // --- Hash password ---
+    // Hash the password
     const salt = crypto.randomBytes(16).toString('hex');
     const hashedPassword = hashPassword(password, salt);
 
-    // --- Create new user ---
+    // Create user
     const newUser = {
-        name: name,
-        email: email,
-        username: username,
+        name,
+        email,
+        username,
         password: hashedPassword,
-        salt: salt,
-        ownerID: ownerID,
+        salt,
+        ownerID,
     };
 
     await userCollection.insertOne(newUser);
