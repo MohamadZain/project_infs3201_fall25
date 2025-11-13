@@ -2,10 +2,9 @@
 // -----------------------------------------------------------
 // Persistence Layer
 // Direct MongoDB access only — no business logic
-// Collections: photos_temp, albums_temp
 // -----------------------------------------------------------
 
-const mongodb = require('mongodb');
+const mongodb = require('mongodb')
 
 let client = undefined;
 let db = undefined;
@@ -16,10 +15,10 @@ let albumCollection = undefined;
  * Connect to MongoDB if not already connected
  */
 async function connectDatabase() {
-    if (client) return;
-    client = new mongodb.MongoClient('mongodb+srv://student:12class34@cluster1.sjh42tn.mongodb.net/');
-    await client.connect();
-    db = client.db('infs3201_fall2025');
+    if (client) return
+    client = new mongodb.MongoClient('mongodb+srv://student:12class34@cluster1.sjh42tn.mongodb.net/')
+    await client.connect()
+    db = client.db('infs3201_fall2025')
     photoCollection = db.collection('photos');
     albumCollection = db.collection('albums');
 }
@@ -29,8 +28,8 @@ async function connectDatabase() {
  */
 async function close() {
     if (client) {
-        await client.close();
-        client = undefined;
+        await client.close()
+        client = undefined
     }
 }
 
@@ -104,9 +103,19 @@ async function addTag(pid, tag) {
     await connectDatabase();
     const photo = await getPhotoDetails(pid);
     if (!photo) return false;
-    if (!photo.tags) photo.tags = [];
-    if (photo.tags.includes(tag)) return false;
-    photo.tags.push(tag);
+    if (!photo.tags) photo.tags = []
+
+    let exists = false;
+    for (let i = 0; i < photo.tags.length; i++) {
+        if (photo.tags[i] === tag) {
+            exists = true;
+            break;
+        }
+    }
+    if (exists) return false
+
+    photo.tags.push(tag)
+
     const res = await photoCollection.updateOne(
         { id: pid },
         { $set: { tags: photo.tags } }
@@ -132,4 +141,4 @@ module.exports = {
     updatePhoto,
     addTag,
     close
-};
+}

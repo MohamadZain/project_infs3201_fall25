@@ -35,12 +35,25 @@ async function findPhoto() {
             const ad = await business.getAlbumDetails(aid)
             if (ad) albumList.push(ad.name)
         }
-        console.log(`Albums: ${albumList.join(', ')}`)
-
-        let tagsStr = ''
-        if (photoDetails.tags) {
-            tagsStr = photoDetails.tags.join(', ')
+    let albumsStr = ''
+    for (let i = 0; i < albumList.length; i++) {
+        albumsStr += albumList[i]
+    if (i !== albumList.length - 1) {
+        albumsStr += ', '
+            }
         }
+console.log(`Albums: ${albumsStr}`)
+
+    let tagsStr = ''
+    if (photoDetails.tags) {
+        for (let i = 0; i < photoDetails.tags.length; i++) {
+        tagsStr += photoDetails.tags[i]
+        if (i !== photoDetails.tags.length - 1) {
+            tagsStr += ', '
+            }
+        }
+    }
+
         console.log(` Tags: ${tagsStr}`)
     } else {
         console.log('!!! Photo not found')
@@ -102,10 +115,16 @@ async function albumPhotos() {
     console.log('filename,resolution,tags')
     for (let p of photos) {
         // Join tags into a string if present
-        let tags = ''
+        tags = ''
         if (p.tags) {
-            tags = p.tags.join(':')
+        for (let i = 0; i < p.tags.length; i++) {
+            tags += p.tags[i]
+        if (i !== p.tags.length - 1) {
+            tags += ':'
+                }
+             }
         }
+
         console.log(`${p.filename},${p.resolution},${tags}`)
     }
     console.log('\n\n')
