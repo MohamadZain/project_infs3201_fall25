@@ -76,7 +76,6 @@ app.get('/album/:aid', ensureLogin, async (req, res) => {
     let albumId = Number(req.params.aid);
     let albumDetails = await business.getAlbumDetails(albumId);
 
-    // CORRECT: business layer returns filtered photos
     let visiblePhotos = await business.getPhotosInAlbum(albumId, req.session.user);
 
     res.render('album', { 
@@ -108,16 +107,16 @@ app.get('/edit-photo', ensureLogin, async (req, res) => {
     let photoId = Number(req.query.pid)
     let photoDetails = await business.getPhotoDetails(photoId)
 
-    console.log('photo ownerID:', photoDetails.ownerID)
-    console.log('logged in user ownerID:', req.session.user.ownerID)
-    console.log('logged in username:', req.session.user.username)
+    // console.log('photo ownerID:', photoDetails.ownerID)
+    // console.log('logged in user ownerID:', req.session.user.ownerID)
+    // console.log('logged in username:', req.session.user.username)
 
     if (photoDetails.ownerID !== req.session.user.ownerID) {
         return res.send('You are not allowed to edit this photo')
     }
 
     
-    // LEVEL 1: Set default visibility
+    // Set default visibility
     let visibility = "private"
     if (photoDetails.visibility === "public") {
         visibility = "public"
@@ -125,7 +124,7 @@ app.get('/edit-photo', ensureLogin, async (req, res) => {
         visibility = "public"
     }
 
-    // LEVEL 1: Set select options
+    // Set select options
     let selectPrivate = ""
     let selectPublic = ""
     if (visibility === "private") {
