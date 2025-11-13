@@ -1,6 +1,36 @@
-<h1>Photo Album</h1>
-<ul>
-    {{#each albums}}
-    <li><a href="/album/{{this.id}}">{{this.name}}</a></li>
-    {{/each}}
-</ul>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Photo Album</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        header h1 { margin: 0; }
+        nav a { margin-left: 10px; text-decoration: none; color: #007BFF; }
+        nav a:hover { text-decoration: underline; }
+        ul { list-style-type: none; padding-left: 0; }
+        li { margin-bottom: 5px; }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Photo Album</h1>
+        <nav>
+            {{#if user}}
+                <span>Welcome, {{user.username}}!</span>
+                <a href="/logout">Logout</a>
+            {{else}}
+                <a href="/login">Login</a>
+                <a href="/register">Register</a>
+            {{/if}}
+        </nav>
+    </header>
+
+    <ul>
+        {{#each albums}}
+        <li><a href="/album/{{this.id}}">{{this.name}}</a></li>
+        {{/each}}
+    </ul>
+</body>
+</html>

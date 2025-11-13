@@ -73,25 +73,26 @@ app.post('/register', async (req, res) => {
 
 // --- Album & Photo Routes ---
 app.get('/album/:aid', ensureLogin, async (req, res) => {
-    let albumId = Number(req.params.aid)
-    let albumDetails = await business.getAlbumDetails(albumId)
-    let photoList = await business.getPhotosInAlbum(albumId)
+    let albumId = Number(req.params.aid);
+    let albumDetails = await business.getAlbumDetails(albumId);
 
-    let visiblePhotos = []
-    for (let photo of photoList) {
-        if (photo.visibility !== "private" || photo.owner === req.session.user.id) {
-            visiblePhotos.push(photo)
-        }
-    }
+    // CORRECT: business layer returns filtered photos
+    let visiblePhotos = await business.getPhotosInAlbum(albumId, req.session.user);
 
-    res.render('album', { album: albumDetails, photos: visiblePhotos, user: req.session.user, layout: undefined })
-})
+    res.render('album', { 
+        album: albumDetails, 
+        photos: visiblePhotos, 
+        count: visiblePhotos.length,
+        user: req.session.user, 
+        layout: undefined 
+    });
+});
 
 app.get('/photo-details/:pid', ensureLogin, async (req, res) => {
     let photoId = Number(req.params.pid)
     let photoDetails = await business.getPhotoDetails(photoId)
 
-    if (photoDetails && photoDetails.visibility === "private" && photoDetails.owner !== req.session.user.id) {
+    if (photoDetails && photoDetails.visibility === "private" && photoDetails.ownerID !== req.session.user.ownerID) {
         return res.send("This photo is private.")
     }
 
@@ -107,12 +108,14 @@ app.get('/edit-photo', ensureLogin, async (req, res) => {
     let photoId = Number(req.query.pid)
     let photoDetails = await business.getPhotoDetails(photoId)
 
-    console.log('photo owner:', photoDetails.owner)
-    console.log('logged in user:', req.session.user.username)
+    console.log('photo ownerID:', photoDetails.ownerID)
+    console.log('logged in user ownerID:', req.session.user.ownerID)
+    console.log('logged in username:', req.session.user.username)
 
-    if (photoDetails.owner !== req.session.user.id) {
+    if (photoDetails.ownerID !== req.session.user.ownerID) {
         return res.send('You are not allowed to edit this photo')
     }
+
     
     // LEVEL 1: Set default visibility
     let visibility = "private"
@@ -142,7 +145,7 @@ app.post('/edit-photo', ensureLogin, async (req, res) => {
     let photoDetails = await business.getPhotoDetails(photoId)
 
     
-    if (photoDetails.owner !== req.session.user.id) {
+    if (photoDetails.ownerID !== req.session.user.ownerID) {
         return res.send('You are not allowed to edit this photo')
     }
 

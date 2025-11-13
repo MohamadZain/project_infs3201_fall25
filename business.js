@@ -1,68 +1,94 @@
-const { MongoClient } = require('mongodb');
+// business.js
+// -----------------------------------------------------------
+// Business Logic Layer
+// Handles rules: visibility filtering, ownership, etc.
+// Does NOT touch MongoDB directly — uses persistence.js
+// -----------------------------------------------------------
 
-let client;
-let db;
-let photoCollection;
-let albumCollection;
+const persistence = require('./persistence');
 
-async function connectDatabase() {
-    if (client) return; // already connected
-    client = new MongoClient('mongodb+srv://student:12class34@cluster1.sjh42tn.mongodb.net/');
-    await client.connect();
-    db = client.db('infs3201_fall2025');
-    photoCollection = db.collection('photos_temp');
-    albumCollection = db.collection('albums');
-}
-
-async function close() {
-    if (client) {
-        await client.close();
-        client = undefined;
-    }
-}
-
+/**
+ * Get all albums (no filtering needed)
+ * @returns {Promise<Array>} List of album objects
+ */
 async function getAlbums() {
-    await connectDatabase();
-    return await albumCollection.find().toArray();
+    return await persistence.getAlbums();
 }
 
+/**
+ * Get album by ID
+ * @param {number} albumId 
+ * @returns {Promise<Object|null>}
+ */
 async function getAlbumDetails(albumId) {
-    await connectDatabase();
-    return await albumCollection.findOne({ id: albumId });
+    return await persistence.getAlbumDetails(albumId);
 }
 
+/**
+ * Get album by name
+ * @param {string} name 
+ * @returns {Promise<Object|null>}
+ */
 async function getAlbumDetailsByName(name) {
-    await connectDatabase();
-    return await albumCollection.findOne({ name });
+    return await persistence.getAlbumDetailsByName(name);
 }
 
-async function getPhotosInAlbum(albumId) {
-    await connectDatabase();
-    return await photoCollection.find({ albums: albumId }).toArray();
+/**
+ * Get all photos in an album, filtered by visibility for current user
+ * @param {number} albumId 
+ * @param {Object} user - Current logged-in user (from session)
+ * @returns {Promise<Array>} Visible photos only
+ */
+async function getPhotosInAlbum(albumId, user) {
+    const photos = await persistence.getPhotosInAlbum(albumId);
+    const visiblePhotos = [];
+
+    for (let photo of photos) {
+        // Show if: public OR belongs to current user
+        if (photo.visibility !== 'private' || photo.ownerID === user.ownerID) {
+            visiblePhotos.push(photo);
+        }
+    }
+
+    return visiblePhotos;
 }
 
+/**
+ * Get photo details (no visibility check — done in route)
+ * @param {number} photoId 
+ * @returns {Promise<Object|null>}
+ */
 async function getPhotoDetails(photoId) {
-    await connectDatabase();
-    return await photoCollection.findOne({ id: photoId });
+    return await persistence.getPhotoDetails(photoId);
 }
 
+/**
+ * Update photo fields (title, description, visibility)
+ * @param {number} pid 
+ * @param {string} title 
+ * @param {string} description 
+ * @param {string} [visibility] - 'public' or 'private'
+ * @returns {Promise<boolean>} Success
+ */
 async function updatePhoto(pid, title, description, visibility) {
-    await connectDatabase();
-    const updateObj = { title, description };
-    if (visibility) updateObj.visibility = visibility;
-    const res = await photoCollection.updateOne({ id: pid }, { $set: updateObj });
-    return res.modifiedCount === 1;
+    return await persistence.updatePhoto(pid, title, description, visibility);
 }
 
+/**
+ * Add a tag to a photo (idempotent)
+ * @param {number} pid 
+ * @param {string} tag 
+ * @returns {Promise<boolean>} Success
+ */
 async function addTag(pid, tag) {
-    await connectDatabase();
-    const photo = await getPhotoDetails(pid);
-    if (!photo) return false;
-    if (!photo.tags) photo.tags = [];
-    if (photo.tags.includes(tag)) return false;
-    photo.tags.push(tag);
-    const res = await photoCollection.updateOne({ id: pid }, { $set: { tags: photo.tags } });
-    return res.modifiedCount === 1;
+    return await persistence.addTag(pid, tag);
+}
+
+/**
+ * Close DB connection (for CLI tool)
+ */
+async function close() {
+    await persistence.close();
 }
 
 module.exports = {
