@@ -1,132 +1,94 @@
 const prompt = require('prompt-sync')()
 const business = require('./business')
 
-/**
- * Convert the date format into a standard reading format for display.
- * @param {*} iso ISO date format
- * @returns English description of the date
- */
 function formatDate(iso) {
     const date = new Date(iso)
-    const formatted = date.toLocaleDateString("en-US", {
+    return date.toLocaleDateString("en-US", {
         year: "numeric",
         month: "long",
         day: "numeric"
     })
-    return formatted
 }
 
-/**
- * The function to interact with the user and to display the details of the photo.
- */
 async function findPhoto() {
     console.log('\n\n')
-    let pid = Number(prompt('Photo ID? '))
-    let photoDetails = await business.getPhotoDetails(pid)
+    const pid = Number(prompt('Photo ID? '))
+    const photoDetails = await business.getPhotoDetails(pid)
     if (photoDetails) {
         console.log(`Filename: ${photoDetails.filename}`)
         console.log(` Title: ${photoDetails.title}`)
-        console.log(`  Date: ${formatDate(photoDetails.date)}`)
+        console.log(` Date: ${formatDate(photoDetails.date)}`)
+        
+        const albumList = []
+        for (let aid of photoDetails.albums || []) {
+            const ad = await business.getAlbumDetails(aid)
+            if (ad) albumList.push(ad.name)
+        }
         console.log(`Albums: ${albumList.join(', ')}`)
-        console.log(`  Tags: ${photoDetails.tags.join(', ')}`)
-    }
-    else {
+        console.log(` Tags: ${photoDetails.tags ? photoDetails.tags.join(', ') : ''}`)
+    } else {
         console.log('!!! Photo not found')
     }
     console.log('\n\n')
 }
 
-/**
- * Displays a prompt asking what the new value should be. If the user just presses enter,
- * the original value will be returned.
- * @param {*} fieldName 
- * @param {*} previousValue 
- * @returns 
- */
-function promptTitle(fieldName, previousValue) {
-    let result = previousValue
-    let newValue = prompt(`Enter value for ${fieldName} [${previousValue}]: `)
-    if (newValue !== "") {
-        result = newValue
-    }
-    return result
+function promptField(fieldName, current) {
+    const input = prompt(`Enter value for ${fieldName} [${current}]: `)
+    return input !== '' ? input : current
 }
 
-
-
-/**
- * Interact with the user to update details about he title and description of the photo.
- */
 async function updatePhotoDetails() {
     console.log('\n\n')
-    let pid = Number(prompt('Photo ID? '))
-    let photoDetails = await business.getPhotoDetails(pid)
-    if (!photoDetails) {
+    const pid = Number(prompt('Photo ID? '))
+    const photo = await business.getPhotoDetails(pid)
+    if (!photo) {
         console.log("*** not found***")
         return
     }
-    console.log("Press enter to reuse existing value.")
-    let newTitle = promptTitle('title', photoDetails.title)
-    let newDescription = promptTitle('description', photoDetails.description)
-    let result = await business.updatePhoto(pid, newTitle, newDescription)
-    if (result) {
-        console.log("Photo updated")
-    }
-    else {
-        console.log('!!! Problem updating')
-    }
+    console.log("Press enter to keep current value.")
+    const newTitle = promptField('title', photo.title)
+    const newDesc = promptField('description', photo.description)
+    const result = await business.updatePhoto(pid, newTitle, newDesc)
+    console.log(result ? "Photo updated" : '!!! Problem updating')
     console.log('\n\n')
 }
 
-/**
- * Interact wth the user to show the photos from an album in a CSV like format.
- * @returns 
- */
 async function albumPhotos() {
     console.log('\n\n')
-    let albumName = prompt('What is the name of the album? ')
-    let albumDetails = await business.getAlbumDetailsByName(albumName)
-    if (!albumDetails) {
+    const name = prompt('What is the name of the album? ')
+    const album = await business.getAlbumDetailsByName(name)
+    if (!album) {
         console.log('!!! Album not found\n\n')
         return
     }
-    let photoList = await business.getPhotosInAlbum(albumDetails.id)
+    const photos = await business.getPhotosInAlbum(album.id)
     console.log('filename,resolution,tags')
-    for (let p of photoList) {
-        console.log(`${p.filename},${p.resolution},${p.tags.join(':')}`)
+    for (let p of photos) {
+        const tags = p.tags ? p.tags.join(':') : ''
+        console.log(`${p.filename},${p.resolution},${tags}`)
     }
     console.log('\n\n')
 }
 
-/**
- * UI function to interact with the user to ask for the photo id and the tag to apply.
- * @returns 
- */
 async function tagPhoto() {
     console.log('\n\n')
-    let pid = Number(prompt("What photo ID to tag? "))
-    let photoDetails = await business.getPhotoDetails(pid)
-    if (!photoDetails) {
+    const pid = Number(prompt("What photo ID to tag? "))
+    const photo = await business.getPhotoDetails(pid)
+    if (!photo) {
         console.log('!!!! Photo not found')
         return
     }
-    let tag = prompt(`What tag to add (${photoDetails.tags.join(',')})? `).toLowerCase()
-    let result = await business.addTag(pid, tag)
-    if (result) {
-        console.log('Updated')
+    const current = photo.tags ? photo.tags.join(', ') : ''
+    const tag = prompt(`What tag to add (${current})? `).trim().toLowerCase()
+    if (!tag) {
+        console.log('No tag entered.')
+        return
     }
-    else {
-        console.log('Could not add tag')
-    }
+    const result = await business.addTag(pid, tag)
+    console.log(result ? 'Updated' : 'Could not add tag')
     console.log('\n\n')
 }
 
-
-/**
- * Function to display the menu and get a response from the user about what they 
- * want to do. If the user types an invalid selection the program will re-prompt them.
- * @returns The item selected.
- */
 function getMenuSelection() {
     while (true) {
         console.log('1. Find Photo')
@@ -134,41 +96,22 @@ function getMenuSelection() {
         console.log('3. Album Photo List')
         console.log('4. Tag Photo')
         console.log('5. Exit')
-        let selection = Number(prompt('Your selection> '))
-        if (Number.isNaN(selection) || selection < 0 || selection > 5) {
-            console.log("**** ERROR **** select a valid option")
-        }
-        else {
-            return selection
-        }
+        const sel = Number(prompt('Your selection> '))
+        if (sel >= 1 && sel <= 5) return sel
+        console.log("**** ERROR **** select a valid option")
     }
 }
 
-/**
- * The actual photo application.
- */
 async function photoApplication() {
-
     while (true) {
-        let choice = getMenuSelection()
-        if (choice === 1) {
-            await findPhoto()
-        }
-        else if (choice === 2) {
-            await updatePhotoDetails()
-        }
-        else if (choice === 3) {
-            await albumPhotos()
-        }
-        else if (choice === 4) {
-            await tagPhoto()
-        }
-        else if (choice === 5) {
-            break
-        }
+        const choice = getMenuSelection()
+        if (choice === 1) await findPhoto()
+        else if (choice === 2) await updatePhotoDetails()
+        else if (choice === 3) await albumPhotos()
+        else if (choice === 4) await tagPhoto()
+        else if (choice === 5) break
     }
     await business.close()
 }
-
 
 photoApplication()

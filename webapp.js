@@ -79,7 +79,7 @@ app.get('/album/:aid', ensureLogin, async (req, res) => {
 
     let visiblePhotos = []
     for (let photo of photoList) {
-        if (photo.visibility !== "private" || photo.owner === req.session.user.username) {
+        if (photo.visibility !== "private" || photo.owner === req.session.user.id) {
             visiblePhotos.push(photo)
         }
     }
@@ -91,8 +91,12 @@ app.get('/photo-details/:pid', ensureLogin, async (req, res) => {
     let photoId = Number(req.params.pid)
     let photoDetails = await business.getPhotoDetails(photoId)
 
-    if (photoDetails.visibility === "private" && photoDetails.owner !== req.session.user.username) {
+    if (photoDetails && photoDetails.visibility === "private" && photoDetails.owner !== req.session.user.id) {
         return res.send("This photo is private.")
+    }
+
+    if (!photoDetails) {
+        return res.send("Photo not found.")
     }
 
     res.render('view_photo', { photo: photoDetails, user: req.session.user, layout: undefined })
@@ -106,7 +110,7 @@ app.get('/edit-photo', ensureLogin, async (req, res) => {
     console.log('photo owner:', photoDetails.owner)
     console.log('logged in user:', req.session.user.username)
 
-    if (photoDetails.owner !== req.session.user.username) {
+    if (photoDetails.owner !== req.session.user.id) {
         return res.send('You are not allowed to edit this photo')
     }
     
@@ -138,7 +142,7 @@ app.post('/edit-photo', ensureLogin, async (req, res) => {
     let photoDetails = await business.getPhotoDetails(photoId)
 
     
-    if (photoDetails.owner !== req.session.user.username) {
+    if (photoDetails.owner !== req.session.user.id) {
         return res.send('You are not allowed to edit this photo')
     }
 

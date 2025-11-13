@@ -1,69 +1,77 @@
-const persistence = require('./persistence')
+const { MongoClient } = require('mongodb');
 
-async function getAlbumDetails(albumId) {
-    return await persistence.getAlbumDetails(albumId)
-}
+let client;
+let db;
+let photoCollection;
+let albumCollection;
 
-async function getPhotoDetails(photoId) {
-    let photoDetails = await persistence.getPhotoDetails(photoId)
-    if (photoDetails) {
-        let albumList = []  // ← ADD let HERE
-        for (let aid of photoDetails.albums) {
-            let ad = await persistence.getAlbumDetails(aid)
-            if (ad) {
-                albumList.push(ad.name)
-            }
-        }
-        photoDetails.albumNames = albumList
-    }
-    return photoDetails
-}
-
-async function updatePhoto(pid, title, description, visibility) {
-    let photoDetails = await persistence.getPhotoDetails(pid)
-    if (!photoDetails) {
-        return undefined
-    }
-    return await persistence.updatePhoto(pid, title, description, visibility)
-}
-
-async function getAlbumDetailsByName(name) {
-    return await persistence.getAlbumDetailsByName(name)
-}
-
-async function getPhotosInAlbum(albumId) {
-    return await persistence.getPhotosInAlbum(albumId)
-}
-
-async function addTag(id, tag) {
-    let details = await persistence.getPhotoDetails(id)
-    if (!details) {
-        return false
-    }
-
-    if (!details.tags.includes(tag)) {
-        await persistence.addTag(id, tag)
-        return true
-    } else {
-        return false
-    }
+async function connectDatabase() {
+    if (client) return; // already connected
+    client = new MongoClient('mongodb+srv://student:12class34@cluster1.sjh42tn.mongodb.net/');
+    await client.connect();
+    db = client.db('infs3201_fall2025');
+    photoCollection = db.collection('photos_temp');
+    albumCollection = db.collection('albums');
 }
 
 async function close() {
-    await persistence.close()
+    if (client) {
+        await client.close();
+        client = undefined;
+    }
 }
 
 async function getAlbums() {
-    return await persistence.getAlbums()
+    await connectDatabase();
+    return await albumCollection.find().toArray();
+}
+
+async function getAlbumDetails(albumId) {
+    await connectDatabase();
+    return await albumCollection.findOne({ id: albumId });
+}
+
+async function getAlbumDetailsByName(name) {
+    await connectDatabase();
+    return await albumCollection.findOne({ name });
+}
+
+async function getPhotosInAlbum(albumId) {
+    await connectDatabase();
+    return await photoCollection.find({ albums: albumId }).toArray();
+}
+
+async function getPhotoDetails(photoId) {
+    await connectDatabase();
+    return await photoCollection.findOne({ id: photoId });
+}
+
+async function updatePhoto(pid, title, description, visibility) {
+    await connectDatabase();
+    const updateObj = { title, description };
+    if (visibility) updateObj.visibility = visibility;
+    const res = await photoCollection.updateOne({ id: pid }, { $set: updateObj });
+    return res.modifiedCount === 1;
+}
+
+async function addTag(pid, tag) {
+    await connectDatabase();
+    const photo = await getPhotoDetails(pid);
+    if (!photo) return false;
+    if (!photo.tags) photo.tags = [];
+    if (photo.tags.includes(tag)) return false;
+    photo.tags.push(tag);
+    const res = await photoCollection.updateOne({ id: pid }, { $set: { tags: photo.tags } });
+    return res.modifiedCount === 1;
 }
 
 module.exports = {
-    getPhotoDetails,
-    getAlbumDetails,
-    updatePhoto,
     getAlbums,
+    getAlbumDetails,
     getAlbumDetailsByName,
     getPhotosInAlbum,
+    getPhotoDetails,
+    updatePhoto,
     addTag,
     close
-}
+};

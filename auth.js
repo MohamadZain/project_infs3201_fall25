@@ -1,65 +1,30 @@
-// auth.js
-const fs = require('fs/promises');
-const path = require('path');
+const { MongoClient } = require('mongodb');
 
-// Path to users.json
-const USERS_FILE = path.join(__dirname, 'users.json');
+const uri = 'mongodb+srv://student:12class34@cluster1.sjh42tn.mongodb.net/';
+const client = new MongoClient(uri);
+const dbName = 'infs3201_fall2025';
+let db, userCollection;
 
-// Load users from file
-async function loadUsers() {
-    const data = await fs.readFile(USERS_FILE, 'utf-8');
-    return JSON.parse(data);
+async function connectDB() {
+    if (!db) {
+        await client.connect();
+        db = client.db(dbName);
+        userCollection = db.collection('users_temp'); // ← your temp users
+    }
 }
 
-// Save users to file
-async function saveUsers(users) {
-    await fs.writeFile(USERS_FILE, JSON.stringify(users, null, 2));
-}
-
-// === LOGIN ===
 async function verifyUser(username, password) {
-    const users = await loadUsers();
-    const user = users.find(u => u.username === username);
-
-    if (!user) {
-        return null; // user not found
-    }
-
-    if (user.password === password) {
-        return { id: user.id, username: user.username };
-    }
-
-    return null; // wrong password
+    await connectDB();
+    return await userCollection.findOne({ username, password }); // plain-text match
 }
 
-// === REGISTER ===
-async function registerUser(name, email, username, password) {
-    const users = await loadUsers();
-
-    // Check if username or email already exists
-    const exists = users.some(u => u.username === username || u.email === email);
-    if (exists) {
-        return { success: false, message: 'Username or email already taken' };
-    }
-
-    // Create new user
-    const newId = users.length > 0 ? Math.max(...users.map(u => u.id)) + 1 : 1;
-
-    const newUser = {
-        id: newId,
-        name: name,
-        email: email,
-        username: username,
-        password: password   // plain text (as requested)
-    };
-
-    users.push(newUser);
-    await saveUsers(users);
-
-    return {
-        success: true,
-        user: { id: newId, username: username }
-    };
+async function registerUser(username, password) {
+    await connectDB();
+    const existing = await userCollection.findOne({ username });
+    if (existing) return { success: false, message: 'Username exists' };
+    const newUser = { username, password };
+    await userCollection.insertOne(newUser);
+    return { success: true, user: newUser };
 }
 
 module.exports = { verifyUser, registerUser };
