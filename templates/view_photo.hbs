@@ -1,6 +1,3 @@
-<head>
-    <link rel="stylesheet" href="/static/style.css">
-</head>
 <body>
 <h1>Photo Details</h1>
 <a href="/edit-photo?pid={{photo.id}}">Edit</a><br>
@@ -8,4 +5,16 @@ Title: {{photo.title}}<br>
 Description: {{photo.description}}<br>
 Visibility: {{photo.visibility}}<br>
 <img src="/photos/{{photo.filename}}">
+
+<h2>Comments</h2>
+<ul>
+  {{#each comments}}
+    <li><strong>{{this.username}}:</strong> {{this.text}}</li>
+  {{/each}}
+</ul>
+
+<form method="POST" action="/photo-details/{{photo.id}}/comment">
+  <input type="text" name="text" placeholder="Add a comment" required>
+  <button type="submit">Post</button>
+</form>
 </body>

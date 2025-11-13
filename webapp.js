@@ -156,6 +156,45 @@ app.post('/edit-photo', ensureLogin, async (req, res) => {
     res.redirect(`/photo-details/${photoId}`)
 })
 
+
+app.get('/photo-details/:pid', ensureLogin, async (req, res) => {
+    const photoId = Number(req.params.pid);
+    const photo = await business.getPhotoDetails(photoId);
+    if (!photo) return res.send("Photo not found.");
+
+    // Private photo check
+    if (photo.visibility === "private" && photo.ownerID !== req.session.user.ownerID) {
+        return res.send("This photo is private.");
+    }
+
+    res.render('view_photo', {
+        photo,
+        comments: photo.comments || [],  // pass comments array to template
+        user: req.session.user,
+        layout: undefined
+    });
+});
+
+app.post('/photo-details/:pid/comment', ensureLogin, async (req, res) => {
+    const photoId = Number(req.params.pid); // match type in MongoDB
+    const text = req.body.text?.trim();
+    if (!text) return res.redirect(`/photo-details/${photoId}`);
+
+    const photo = await business.getPhotoDetails(photoId);
+    if (!photo) return res.send("Photo not found.");
+
+    if (!photo.comments) photo.comments = [];
+    photo.comments.push({
+        username: req.session.user.username,
+        text,
+        date: new Date()
+    });
+
+    await business.updatePhotoComments(photoId, photo.comments);
+    res.redirect(`/photo-details/${photoId}`);
+});
+
+
 app.listen(8000, () => {
     console.log('Server started on port 8000')
 })

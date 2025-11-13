@@ -6,6 +6,7 @@
 // -----------------------------------------------------------
 
 const persistence = require('./persistence');
+const commentsStore = {};
 
 /**
  * Get all albums (no filtering needed)
@@ -91,6 +92,25 @@ async function close() {
     await persistence.close();
 }
 
+// business.js
+async function addComment(photoId, user, text) {
+    const photo = await persistence.getPhotoDetails(photoId);
+    if (!photo.comments) photo.comments = [];
+    photo.comments.push({ username: user.username, text, date: new Date() });
+    return await persistence.updatePhotoComments(photoId, photo.comments);
+}
+
+async function getComments(photoId) {
+    const photo = await persistence.getPhotoDetails(photoId);
+    return photo.comments || [];
+}
+
+async function updatePhotoComments(photoId, comments) {
+    return await persistence.updatePhotoComments(photoId, comments);
+}
+
+module.exports.updatePhotoComments = updatePhotoComments;
+
 module.exports = {
     getAlbums,
     getAlbumDetails,
@@ -99,5 +119,8 @@ module.exports = {
     getPhotoDetails,
     updatePhoto,
     addTag,
-    close
+    close,
+    addComment,
+    getComments,
+    updatePhotoComments
 };

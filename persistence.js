@@ -123,6 +123,15 @@ async function getAlbums() {
     return await albumCollection.find().toArray();
 }
 
+async function updatePhotoComments(pid, comments) {
+    await connectDatabase();
+    const res = await photoCollection.updateOne(
+        { id: pid },
+        { $set: { comments } }
+    );
+    return res.modifiedCount === 1;
+}
+
 module.exports = {
     getPhotoDetails,
     getPhotosInAlbum,
@@ -131,5 +140,6 @@ module.exports = {
     getAlbumDetailsByName,
     updatePhoto,
     addTag,
-    close
+    close,
+    updatePhotoComments
 };
