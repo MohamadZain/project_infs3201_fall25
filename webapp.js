@@ -19,7 +19,7 @@ app.use('/static', express.static(__dirname + "/static"))
 app.use('/photos', express.static(__dirname + "/photos"))
 
 // --- In-memory login store ---
-const loggedInUsers = {}  // Key: sessionID, Value: user object
+const loggedInUsers = {}
 
 // --- Manual cookie parser ---
 function parseCookies(req) {
@@ -69,16 +69,16 @@ app.post('/login', async (req, res) => {
     }
 })
 
-// --- Logout Route ---
+// --- Logout ---
 app.get('/logout', (req, res) => {
     const cookies = parseCookies(req)
     const sessionID = cookies.sessionID
     if (sessionID) delete loggedInUsers[sessionID]
-    res.setHeader('Set-Cookie', 'sessionID=; Max-Age=0') // clear cookie
+    res.setHeader('Set-Cookie', 'sessionID=; Max-Age=0')
     res.redirect('/login')
 })
 
-// --- Register Routes ---
+// --- Register ---
 app.get('/register', (req, res) => {
     res.render('register', { layout: undefined })
 })
@@ -96,7 +96,7 @@ app.post('/register', async (req, res) => {
     }
 })
 
-// --- Album & Photo Routes ---
+// --- Album & Photo ---
 app.get('/album/:aid', ensureLogin, async (req, res) => {
     let albumId = Number(req.params.aid)
     let albumDetails = await business.getAlbumDetails(albumId)
@@ -115,17 +115,28 @@ app.get('/photo-details/:pid', ensureLogin, async (req, res) => {
     let photoId = Number(req.params.pid)
     let photoDetails = await business.getPhotoDetails(photoId)
 
-    if (photoDetails && photoDetails.visibility === "private" && photoDetails.ownerID !== req.user.ownerID) {
+    if (!photoDetails) return res.send("Photo not found.")
+    if (photoDetails.visibility === "private" && photoDetails.ownerID !== req.user.ownerID) {
         return res.send("This photo is private.")
     }
 
-    if (!photoDetails) {
-        return res.send("Photo not found.")
-    }
+    // Get comments
+    const comments = await business.getComments(photoId)
 
-    res.render('view_photo', { photo: photoDetails, user: req.user, layout: undefined })
+    res.render('view_photo', { photo: photoDetails, user: req.user, comments, layout: undefined })
 })
 
+// --- Add comment ---
+app.post('/photo-details/:pid/comment', ensureLogin, async (req, res) => {
+    let photoId = Number(req.params.pid)
+    const text = req.body.text
+    if (!text || text.trim() === '') return res.redirect(`/photo-details/${photoId}`)
+
+    await business.addComment(photoId, req.user.username, text.trim())
+    res.redirect(`/photo-details/${photoId}`)
+})
+
+// --- Edit photo ---
 app.get('/edit-photo', ensureLogin, async (req, res) => {
     let photoId = Number(req.query.pid)
     let photoDetails = await business.getPhotoDetails(photoId)
@@ -134,12 +145,9 @@ app.get('/edit-photo', ensureLogin, async (req, res) => {
         return res.send('You are not allowed to edit this photo')
     }
 
-    // Set default visibility
     let visibility = "private"
     if (photoDetails.visibility === "public") visibility = "public"
-    else if (!photoDetails.visibility) visibility = "public"
 
-    // Set select options
     let selectPrivate = ""
     let selectPublic = ""
     if (visibility === "private") selectPrivate = "selected"

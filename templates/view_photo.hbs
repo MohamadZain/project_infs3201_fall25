@@ -3,9 +3,29 @@
 </head>
 <body>
 <h1>Photo Details</h1>
+
 <a href="/edit-photo?pid={{photo.id}}">Edit</a><br>
 Title: {{photo.title}}<br>
 Description: {{photo.description}}<br>
 Visibility: {{photo.visibility}}<br>
-<img src="/photos/{{photo.filename}}">
+<img src="/photos/{{photo.filename}}" style="max-width:600px"><br><br>
+
+<h2>Comments</h2>
+
+{{#if comments}}
+    <ul>
+    {{#each comments}}
+        <li><strong>{{this.username}}:</strong> {{this.text}} <em>({{this.date}})</em></li>
+    {{/each}}
+    </ul>
+{{else}}
+    <p>No comments yet.</p>
+{{/if}}
+
+<h3>Add a comment</h3>
+<form method="POST" action="/photo-details/{{photo.id}}/comment">
+    <textarea name="text" rows="3" cols="50" required></textarea><br>
+    <button type="submit">Post Comment</button>
+</form>
+
 </body>
