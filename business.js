@@ -108,6 +108,26 @@ async function close() {
     await persistence.close();
 }
 
+/**
+ * Create a new album for the current user
+ * @param {string} name - Album name
+ * @param {Object} user - Logged-in user object
+ * @returns {Promise<Object>} Created album
+ */
+async function createAlbum(name, user) {
+    return await persistence.createAlbum(name, user.ownerID);
+}
+
+/**
+ * Add a photo to an album
+ * @param {number} photoId
+ * @param {number} albumId
+ * @returns {Promise<boolean>}
+ */
+async function addPhotoToAlbum(photoId, albumId) {
+    return await persistence.addPhotoToAlbum(photoId, albumId);
+}
+
 module.exports = {
     getAlbums,
     getAlbumDetails,
@@ -118,5 +138,7 @@ module.exports = {
     addTag,
     close,
     getComments,   
-    addComment     
+    addComment,
+    createAlbum,
+    addPhotoToAlbum
 };

@@ -218,6 +218,25 @@ app.post('/edit-photo', ensureLogin, async (req, res) => {
 })
 
 /**
+ * Show album creation page
+ */
+app.get('/albums/create', ensureLogin, (req, res) => {
+    res.render('create_album', { user: req.user, layout: undefined });
+});
+
+/**
+ * Handle album creation
+ */
+app.post('/albums/create', ensureLogin, async (req, res) => {
+    const { name } = req.body;
+    if (!name || name.trim() === '') {
+        return res.render('create_album', { user: req.user, error: 'Album name required', layout: undefined });
+    }
+    await business.createAlbum(name.trim(), req.user);
+    res.redirect('/');
+});
+
+/**
  * Start the Express server
  */
 app.listen(8000, () => {

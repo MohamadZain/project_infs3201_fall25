@@ -1,0 +1,10 @@
+<h2>Create New Album</h2>
+{{#if error}}
+<p style="color:red">{{error}}</p>
+{{/if}}
+<form method="POST" action="/albums/create">
+    <label>Album Name:</label>
+    <input type="text" name="name" />
+    <button type="submit">Create Album</button>
+</form>
+<a href="/">Back to Home</a>
