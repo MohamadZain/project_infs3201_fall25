@@ -1,12 +1,21 @@
-<h1>Login</h1>
-{{#if error}}
-<p style="color:red">{{error}}</p>
-{{/if}}
-<form method="POST" action="/login">
-    <label>Username:</label><br>
-    <input type="text" name="username" required><br>
-    <label>Password:</label><br>
-    <input type="password" name="password" required><br><br>
-    <button type="submit">Login</button>
-</form>
-<p>Don't have an account? <a href="/register">Register here</a></p>
+<link rel="stylesheet" href="/static/style.css">
+
+<div class="login-container">
+    <div class="login-box">
+        <h1>Login</h1>
+        {{#if error}}
+        <p class="error-message">{{error}}</p>
+        {{/if}}
+        <form method="POST" action="/login">
+            <label>Username:</label>
+            <input type="text" name="username" required>
+
+            <label>Password:</label>
+            <input type="password" name="password" required>
+
+            <button type="submit">Login</button>
+        </form>
+        <p>Don't have an account? <a href="/register">Register here</a></p>
+    </div>
+</div>
+

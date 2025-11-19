@@ -1,16 +1,17 @@
+<link rel="stylesheet" href="/static/style.css">
+
 <h1>Photos in {{album.name}} ({{count}} photos)</h1>
 
-<div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:10px;">
+<div class="album-grid">
     {{#each photos}}
-    <div style="text-align:center;">
+    <div class="photo-card">
         <a href="/photo-details/{{id}}">
-            <img src="/photos/{{filename}}" 
-                 style="max-width:200px; max-height:200px;" 
-                 alt="{{title}}" />
+            <img src="/photos/{{filename}}" alt="{{title}}" />
         </a>
         <p>{{title}}</p>
     </div>
     {{/each}}
 </div>
 
-<a href="/">Back to Home</a>
+<a class="back-link" href="/">Back to Home</a>
+

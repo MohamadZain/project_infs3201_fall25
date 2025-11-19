@@ -1,5 +1,4 @@
 // presentation.js
-
 const prompt = require('prompt-sync')()
 const business = require('./business')
 
