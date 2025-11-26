@@ -1,0 +1,18 @@
+<link rel="stylesheet" href="/static/style.css">
+
+<h1>Comment Notifications</h1>
+
+{{#if comments}}
+    <ul>
+    {{#each comments}}
+        <li>
+            <strong>{{this.username}}</strong> commented on photo ID {{this.photoId}}: 
+            "{{this.text}}" <em>({{this.date}})</em>
+        </li>
+    {{/each}}
+    </ul>
+{{else}}
+    <p>No new comments.</p>
+{{/if}}
+
+<a href="/">Back to Home</a>

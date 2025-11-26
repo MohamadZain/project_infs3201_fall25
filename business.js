@@ -128,6 +128,37 @@ async function addPhotoToAlbum(photoId, albumId) {
     return await persistence.addPhotoToAlbum(photoId, albumId);
 }
 
+/**
+ * Get all comments for all photos owned by a user
+ * @param {number} ownerID
+ * @returns {Promise<Array>} List of comments
+ */
+async function getCommentsForUserPhotos(ownerID) {
+    const allAlbums = await persistence.getAlbums();
+    const userPhotoIDs = [];
+
+    // Collect all photo IDs owned by this user
+    for (let i = 0; i < allAlbums.length; i++) {
+        const photos = await persistence.getPhotosInAlbum(allAlbums[i].id);
+        for (let j = 0; j < photos.length; j++) {
+            if (photos[j].ownerID === ownerID) {
+                userPhotoIDs.push(photos[j].id);
+            }
+        }
+    }
+
+    // Collect comments for each photo
+    const commentsForUser = [];
+    for (let k = 0; k < userPhotoIDs.length; k++) {
+        const comments = await persistence.getComments(userPhotoIDs[k]);
+        for (let c = 0; c < comments.length; c++) {
+            commentsForUser.push(comments[c]);
+        }
+    }
+
+    return commentsForUser;
+}
+
 module.exports = {
     getAlbums,
     getAlbumDetails,
@@ -140,5 +171,6 @@ module.exports = {
     getComments,   
     addComment,
     createAlbum,
-    addPhotoToAlbum
+    addPhotoToAlbum,
+    getCommentsForUserPhotos
 };
