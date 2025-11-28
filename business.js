@@ -159,6 +159,35 @@ async function getCommentsForUserPhotos(ownerID) {
     return commentsForUser;
 }
 
+/**
+ * Search photos by title or tag
+ * Only returns photos visible to the user
+ * @param {string} query 
+ * @param {Object} user 
+ * @returns {Promise<Array>}
+ */
+async function searchPhotos(query, user) {
+    const photos = await persistence.getAllPhotos();
+    const results = [];
+
+    for (let photo of photos) {
+        // Only visible photos
+        if (photo.visibility !== 'private' || photo.ownerID === user.ownerID) {
+            const titleMatch = photo.title && photo.title.toLowerCase().includes(query);
+            const tagMatch = photo.tags && photo.tags.some(t => t.toLowerCase().includes(query));
+
+            if (titleMatch || tagMatch) {
+                results.push(photo);
+            }
+        }
+    }
+
+    return results;
+}
+
+module.exports.searchPhotos = searchPhotos;
+
+
 module.exports = {
     getAlbums,
     getAlbumDetails,

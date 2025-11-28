@@ -20,6 +20,14 @@
         </nav>
     </header>
 
+    <!-- Search form -->
+    {{#if user}}
+    <form method="GET" action="/search" class="search-form">
+        <input type="text" name="q" placeholder="Search photos..." required>
+        <button type="submit">Search</button>
+    </form>
+    {{/if}}
+
     <ul>
         {{#each albums}}
         <li><a href="/album/{{this.id}}">{{this.name}}</a></li>

@@ -1,3 +1,4 @@
+//webapp.js
 const express = require('express');
 const handlebars = require('express-handlebars');
 const crypto = require('crypto');
@@ -224,6 +225,47 @@ app.get('/notifications', ensureLogin, async (req, res) => {
 
     res.render('notifications', { user: req.user, comments, layout: undefined });
 });
+
+/**
+ * Search photos by title, description, or tags (public only)
+ */
+app.get('/search', ensureLogin, async (req, res) => {
+    const query = req.query.q;
+    if (!query || query.trim() === '') {
+        return res.render('search_results', { photos: [], user: req.user, layout: undefined });
+    }
+
+    const allAlbums = await business.getAlbums();
+    const matchingPhotos = [];
+
+    // Loop through all albums and photos
+    for (let i = 0; i < allAlbums.length; i++) {
+        const photos = await business.getPhotosInAlbum(allAlbums[i].id, req.user);
+        for (let j = 0; j < photos.length; j++) {
+            const p = photos[j];
+            if (p.visibility !== 'public') continue; // only public photos
+
+            const titleMatch = p.title && p.title.toLowerCase().includes(query.toLowerCase());
+            const descMatch = p.description && p.description.toLowerCase().includes(query.toLowerCase());
+            let tagMatch = false;
+            if (p.tags) {
+                for (let t = 0; t < p.tags.length; t++) {
+                    if (p.tags[t].toLowerCase().includes(query.toLowerCase())) {
+                        tagMatch = true;
+                        break;
+                    }
+                }
+            }
+
+            if (titleMatch || descMatch || tagMatch) {
+                matchingPhotos.push(p);
+            }
+        }
+    }
+
+    res.render('search_results', { photos: matchingPhotos, user: req.user, layout: undefined });
+});
+
 
 /**
  * Start server

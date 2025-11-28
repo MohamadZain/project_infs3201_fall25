@@ -163,6 +163,16 @@ async function addComment(photoId, username, text) {
     return true
 }
 
+/**
+ * Get all photos in the database
+ * @returns {Promise<Array>}
+ */
+async function getAllPhotos() {
+    await connectDatabase();
+    return await photoCollection.find().toArray();
+}
+
+module.exports.getAllPhotos = getAllPhotos;
 
 
 module.exports = {
