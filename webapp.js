@@ -2,6 +2,8 @@
 const express = require('express');
 const handlebars = require('express-handlebars');
 const crypto = require('crypto');
+const fileUpload = require('express-fileupload');
+const path = require('path');
 
 const business = require('./business');
 const auth = require('./auth');
@@ -21,6 +23,13 @@ app.engine('hbs', handlebars.engine());
 app.use(express.urlencoded({ extended: true }));
 app.use('/static', express.static(__dirname + "/static"));
 app.use('/photos', express.static(__dirname + "/photos"));
+
+/**
+ * Middleware for file uploads
+ */
+app.use(fileUpload({
+    limits: { fileSize: 50 * 1024 * 1024 }, // 50MB max file size
+}));
 
 /**
  * In-memory login store
@@ -229,6 +238,121 @@ app.get('/notifications', ensureLogin, async (req, res) => {
 /**
  * Search photos by title, description, or tags (public only)
  */
+/**
+ * Upload photo - GET route (show upload form)
+ */
+app.get('/album/:aid/upload', ensureLogin, async (req, res) => {
+    let albumId = Number(req.params.aid);
+    let albumDetails = await business.getAlbumDetails(albumId);
+    
+    if (!albumDetails) {
+        return res.send('Album not found');
+    }
+
+    res.render('upload_photo', { album: albumDetails, user: req.user, layout: undefined });
+});
+
+
+/**
+ * Upload photo - POST route (handle file upload)
+ */
+app.post('/album/:aid/upload', ensureLogin, async (req, res) => {
+    let albumId = Number(req.params.aid);
+    let albumDetails = await business.getAlbumDetails(albumId);
+    
+    if (!albumDetails) {
+        return res.send('Album not found');
+    }
+
+    // Check if file was uploaded
+    if (!req.files || !req.files.photo) {
+        return res.render('upload_photo', { 
+            album: albumDetails, 
+            user: req.user, 
+            error: 'Please select a photo to upload',
+            layout: undefined 
+        });
+    }
+
+    let uploadedFile = req.files.photo;
+    
+    // Check if it's an image file
+    let allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+    let isValidType = false;
+    for (let i = 0; i < allowedTypes.length; i++) {
+        if (uploadedFile.mimetype === allowedTypes[i]) {
+            isValidType = true;
+            break;
+        }
+    }
+    
+    if (!isValidType) {
+        return res.render('upload_photo', { 
+            album: albumDetails, 
+            user: req.user, 
+            error: 'Only image files (JPEG, PNG, GIF) are allowed',
+            layout: undefined 
+        });
+    }
+
+    // Get title, description, visibility, and tags from form
+    let title = req.body.title || '';
+    let description = req.body.description || '';
+    let visibility = req.body.visibility || 'private';
+    
+    // Process tags - split by comma and clean up
+    let tagsArray = [];
+    if (req.body.tags && req.body.tags.trim() !== '') {
+        let tagsList = req.body.tags.split(',');
+        for (let i = 0; i < tagsList.length; i++) {
+            let tag = tagsList[i].trim().toLowerCase();
+            if (tag !== '') {
+                tagsArray.push(tag);
+            }
+        }
+    }
+
+    // Generate unique filename using timestamp and random string
+    let fileExtension = path.extname(uploadedFile.name);
+    let timestamp = Date.now();
+    let randomString = crypto.randomBytes(8).toString('hex');
+    let newFilename = 'photo_' + timestamp + '_' + randomString + fileExtension;
+
+    // Save file to photos folder
+    let uploadPath = path.join(__dirname, 'photos', newFilename);
+    
+    uploadedFile.mv(uploadPath, async function(err) {
+        if (err) {
+            return res.render('upload_photo', { 
+                album: albumDetails, 
+                user: req.user, 
+                error: 'Error uploading file',
+                layout: undefined 
+            });
+        }
+
+        // Create photo record in database with user-provided data
+        let photoData = {
+            filename: newFilename,
+            title: title,
+            description: description,
+            tags: tagsArray,  // Tags from form input
+            visibility: visibility,
+            ownerID: req.user.ownerID,
+            albumId: albumId,
+            date: new Date().toISOString(),
+            resolution: uploadedFile.size
+        };
+
+        await business.uploadPhoto(photoData);
+        
+        // Redirect back to the album page
+        res.redirect('/album/' + albumId);
+    });
+});
+/**
+ * Search photos by title, description, or tags (public only)
+ */
 app.get('/search', ensureLogin, async (req, res) => {
     const query = req.query.q;
     if (!query || query.trim() === '') {
@@ -265,8 +389,6 @@ app.get('/search', ensureLogin, async (req, res) => {
 
     res.render('search_results', { photos: matchingPhotos, user: req.user, layout: undefined });
 });
-
-
 /**
  * Start server
  */

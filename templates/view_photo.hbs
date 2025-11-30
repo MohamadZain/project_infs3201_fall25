@@ -8,6 +8,17 @@
 Title: {{photo.title}}<br>
 Description: {{photo.description}}<br>
 Visibility: {{photo.visibility}}<br>
+
+{{#if photo.tags}}
+Tags: 
+{{#each photo.tags}}
+    <span style="background-color: #e0e0e0; padding: 3px 8px; margin: 2px; border-radius: 3px; display: inline-block;">{{this}}</span>
+{{/each}}
+<br>
+{{else}}
+Tags: None<br>
+{{/if}}
+
 <img src="/photos/{{photo.filename}}" style="max-width:600px"><br><br>
 
 <h2>Comments</h2>
@@ -27,5 +38,8 @@ Visibility: {{photo.visibility}}<br>
     <textarea name="text" rows="3" cols="50" required></textarea><br>
     <button type="submit">Post Comment</button>
 </form>
+
+<br>
+<a class="back-link" href="/">Back to Home(NEED TO FIX THIS, GO BACK TO ALBUM NOT HOME)</a>
 
 </body>

@@ -172,8 +172,130 @@ async function getAllPhotos() {
     return await photoCollection.find().toArray();
 }
 
-module.exports.getAllPhotos = getAllPhotos;
+/**
+ * Create a new album for a user
+ * @param {string} name - Album name
+ * @param {number} ownerID - Owner's ID
+ * @returns {Promise<Object>} Created album
+ */
+async function createAlbum(name, ownerID) {
+    await connectDatabase();
+    
+    // Get the next album ID using a counter
+    const counterColl = db.collection('counters');
+    let counterDoc = await counterColl.findOne({ _id: 'albumID' });
+    
+    let albumID;
+    if (counterDoc && counterDoc.seq) {
+        albumID = counterDoc.seq + 1;
+        await counterColl.updateOne({ _id: 'albumID' }, { $set: { seq: albumID } });
+    } else {
+        // Initialize counter if it doesn't exist
+        const allAlbums = await albumCollection.find().toArray();
+        let maxID = 0;
+        for (let i = 0; i < allAlbums.length; i++) {
+            if (allAlbums[i].id > maxID) {
+                maxID = allAlbums[i].id;
+            }
+        }
+        albumID = maxID + 1;
+        await counterColl.updateOne({ _id: 'albumID' }, { $set: { seq: albumID } }, { upsert: true });
+    }
+    
+    const newAlbum = {
+        id: albumID,
+        name: name,
+        ownerID: ownerID
+    };
+    
+    await albumCollection.insertOne(newAlbum);
+    return newAlbum;
+}
 
+/**
+ * Add a photo to an album
+ * @param {number} photoId 
+ * @param {number} albumId 
+ * @returns {Promise<boolean>}
+ */
+async function addPhotoToAlbum(photoId, albumId) {
+    await connectDatabase();
+    const photo = await getPhotoDetails(photoId);
+    if (!photo) return false;
+    
+    // Add album to the albums array if not already present
+    if (!photo.albums) photo.albums = [];
+    
+    let alreadyInAlbum = false;
+    for (let i = 0; i < photo.albums.length; i++) {
+        if (photo.albums[i] === albumId) {
+            alreadyInAlbum = true;
+            break;
+        }
+    }
+    
+    if (alreadyInAlbum) return false;
+    
+    photo.albums.push(albumId);
+    
+    const res = await photoCollection.updateOne(
+        { id: photoId },
+        { $set: { albums: photo.albums } }
+    );
+    return res.modifiedCount === 1;
+}
+
+/**
+ * Create a new photo in the database
+ * @param {Object} photoData - Photo data object
+ * @returns {Promise<Object>} Created photo object
+ */
+async function createPhoto(photoData) {
+    await connectDatabase();
+    
+    // Get the next photo ID using a counter
+    const counterColl = db.collection('counters');
+    let counterDoc = await counterColl.findOne({ _id: 'photoID' });
+    
+    let photoID;
+    if (counterDoc && counterDoc.seq) {
+        photoID = counterDoc.seq + 1;
+        await counterColl.updateOne({ _id: 'photoID' }, { $set: { seq: photoID } });
+    } else {
+        // Initialize counter if it doesn't exist
+        const allPhotos = await photoCollection.find().toArray();
+        let maxID = 0;
+        for (let i = 0; i < allPhotos.length; i++) {
+            if (allPhotos[i].id > maxID) {
+                maxID = allPhotos[i].id;
+            }
+        }
+        photoID = maxID + 1;
+        await counterColl.updateOne({ _id: 'photoID' }, { $set: { seq: photoID } }, { upsert: true });
+    }
+    
+    // Create the photo object with the new ID
+    const newPhoto = {
+        id: photoID,
+        filename: photoData.filename,
+        title: photoData.title,
+        description: photoData.description,
+        tags: photoData.tags,
+        visibility: photoData.visibility,
+        ownerID: photoData.ownerID,
+        albums: [photoData.albumId],  // Put photo in the specified album
+        date: photoData.date,
+        resolution: photoData.resolution
+    };
+    
+    await photoCollection.insertOne(newPhoto);
+    return newPhoto;
+}
+
+module.exports.getAllPhotos = getAllPhotos;
+module.exports.createAlbum = createAlbum;
+module.exports.addPhotoToAlbum = addPhotoToAlbum;
+module.exports.createPhoto = createPhoto;
 
 module.exports = {
     getPhotoDetails,
@@ -185,5 +307,9 @@ module.exports = {
     addTag,
     close,
     getComments,
-    addComment
-}
+    addComment,
+    getAllPhotos,
+    createAlbum,
+    addPhotoToAlbum,
+    createPhoto
+};

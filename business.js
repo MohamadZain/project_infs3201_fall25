@@ -185,8 +185,17 @@ async function searchPhotos(query, user) {
     return results;
 }
 
-module.exports.searchPhotos = searchPhotos;
+/**
+ * Upload a new photo
+ * @param {Object} photoData - Photo data object
+ * @returns {Promise<Object>} Created photo
+ */
+async function uploadPhoto(photoData) {
+    return await persistence.createPhoto(photoData);
+}
 
+module.exports.searchPhotos = searchPhotos;
+module.exports.uploadPhoto = uploadPhoto;
 
 module.exports = {
     getAlbums,
@@ -201,5 +210,7 @@ module.exports = {
     addComment,
     createAlbum,
     addPhotoToAlbum,
-    getCommentsForUserPhotos
+    getCommentsForUserPhotos,
+    searchPhotos,
+    uploadPhoto
 };
