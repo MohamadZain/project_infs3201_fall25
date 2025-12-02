@@ -1,3 +1,5 @@
+/* ---------------- General Styles ---------------- */
+
 /* Album grid */
 .album-grid {
     display: grid;
@@ -48,7 +50,7 @@ ul{
     display: inline-block;
     margin-top: 20px;
     padding: 8px 16px;
-    background-color: #2196F3;
+    background-color: #4267B2; /* Facebook blue */
     color: white;
     text-decoration: none;
     border-radius: 8px;
@@ -56,30 +58,30 @@ ul{
 }
 
 .back-link:hover {
-    background-color: #1769aa;
+    background-color: #365899;
 }
 
-/* Center the login form */
+/* ---------------- Login Page ---------------- */
 .login-container {
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 80vh; /* take most of the viewport height */
-    background-color: #f5f5f5;
+    height: 80vh; /* most of viewport height */
+    background-color: #e9ebee; /* Facebook light gray background */
 }
 
 .login-box {
     background-color: #fff;
     padding: 40px 30px;
-    border-radius: 10px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-    width: 320px;
+    border-radius: 12px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.15);
+    width: 340px;
     text-align: center;
 }
 
 .login-box h1 {
-    margin-bottom: 20px;
-    color: #333;
+    margin-bottom: 25px;
+    color: #4267B2; /* Facebook blue */
 }
 
 .login-box label {
@@ -91,8 +93,8 @@ ul{
 
 .login-box input {
     width: 100%;
-    padding: 10px;
-    margin-bottom: 15px;
+    padding: 12px;
+    margin-bottom: 20px; /* extra spacing for button */
     border-radius: 6px;
     border: 1px solid #ccc;
     font-size: 16px;
@@ -100,21 +102,22 @@ ul{
 
 .login-box button {
     width: 100%;
-    padding: 10px;
+    padding: 12px;
+    margin-top: 10px;
     border: none;
     border-radius: 8px;
-    background-color: #2196F3;
+    background-color: #4267B2;
     color: white;
-    font-size: 16px;
+    font-size: 17px;
     cursor: pointer;
 }
 
 .login-box button:hover {
-    background-color: #1769aa;
+    background-color: #365899;
 }
 
 .login-box p a {
-    color: #2196F3;
+    color: #4267B2;
     text-decoration: none;
 }
 
@@ -127,6 +130,51 @@ ul{
     margin-bottom: 10px;
 }
 
+/* ---------------- Footer bar ---------------- */
+.footer-bar {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    background-color: #4267B2;
+    color: white;
+    text-align: center;
+    padding: 8px 0;
+    font-size: 14px;
+    font-weight: bold;
+    box-shadow: 0 -2px 5px rgba(0,0,0,0.1);
+}
+
+/* ---------------- Search bar styling ---------------- */
+.search-form {
+    display: flex;
+    justify-content: center;
+    margin: 20px 0;
+}
+
+.search-form input[type="text"] {
+    width: 60%;
+    padding: 10px;
+    border-radius: 8px 0 0 8px;
+    border: 1px solid #ccc;
+    font-size: 16px;
+    outline: none;
+}
+
+.search-form button {
+    padding: 10px 20px;
+    border: none;
+    background-color: #4267B2;
+    color: white;
+    font-size: 16px;
+    border-radius: 0 8px 8px 0;
+    cursor: pointer;
+}
+
+.search-form button:hover {
+    background-color: #365899;
+}
+
+/* ---------------- Other styles unchanged ---------------- */
 ul li {
     background-color: #fff;
     padding: 15px;
@@ -153,7 +201,6 @@ ul li a:hover {
     color: #007BFF;
 }
 
-/* Optional album image inside li */
 ul li img {
     width: 100%;
     height: 180px;
@@ -162,39 +209,8 @@ ul li img {
     margin-bottom: 10px;
 }
 
-/* Responsive adjustments */
 @media (max-width: 600px) {
     ul {
         grid-template-columns: 1fr;
     }
-}
-
-/* ---------------- Search bar styling ---------------- */
-.search-form {
-    display: flex;
-    justify-content: center;
-    margin: 20px 0;
-}
-
-.search-form input[type="text"] {
-    width: 60%;
-    padding: 10px;
-    border-radius: 8px 0 0 8px;
-    border: 1px solid #ccc;
-    font-size: 16px;
-    outline: none;
-}
-
-.search-form button {
-    padding: 10px 20px;
-    border: none;
-    background-color: #2196F3;
-    color: white;
-    font-size: 16px;
-    border-radius: 0 8px 8px 0;
-    cursor: pointer;
-}
-
-.search-form button:hover {
-    background-color: #1769aa;
 }
