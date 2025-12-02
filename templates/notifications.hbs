@@ -1,18 +1,40 @@
 <link rel="stylesheet" href="/static/style.css">
 
-<h1>Comment Notifications</h1>
+<header class="main-header">
+    <div class="header-left">Notifications</div>
 
-{{#if comments}}
-    <ul>
-    {{#each comments}}
-        <li>
-            <strong>{{this.username}}</strong> commented on photo ID {{this.photoId}}: 
-            "{{this.text}}" <em>({{this.date}})</em>
-        </li>
-    {{/each}}
-    </ul>
-{{else}}
-    <p>No new comments.</p>
-{{/if}}
+    <div class="header-center">
+        <form class="search-form" action="/search" method="GET">
+            <input type="text" name="q" placeholder="Search photos..." />
+            <button type="submit">Search</button>
+        </form>
+    </div>
 
-<a href="/">Back to Home</a>
+    <div class="header-right">
+        <a href="/" class="header-btn">Home</a>
+        <a href="/logout" class="header-btn">Logout</a>
+    </div>
+</header>
+
+<main class="content-container">
+
+    <div class="notifications-box">
+
+        <h2>Your Notifications</h2>
+
+        {{#if notifications}}
+            <ul class="notification-list">
+                {{#each notifications}}
+                <li class="notification-item">
+                    <div class="notif-message">{{this.message}}</div>
+                    <div class="notif-date">{{this.date}}</div>
+                </li>
+                {{/each}}
+            </ul>
+        {{else}}
+            <p class="no-notifs">You have no notifications.</p>
+        {{/if}}
+
+    </div>
+
+</main>

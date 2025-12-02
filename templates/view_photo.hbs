@@ -1,45 +1,72 @@
 <head>
     <link rel="stylesheet" href="/static/style.css">
 </head>
+
 <body>
-<h1>Photo Details</h1>
 
-<a href="/edit-photo?pid={{photo.id}}">Edit</a><br>
-Title: {{photo.title}}<br>
-Description: {{photo.description}}<br>
-Visibility: {{photo.visibility}}<br>
+<!-- Main Header -->
+<header class="main-header">
+    <div class="header-left">Photo Details</div>
+    <div class="header-center">
+        <form class="search-form" action="/search" method="GET">
+            <input type="text" name="q" placeholder="Search photos..." />
+            <button type="submit">Search</button>
+        </form>
+    </div>
+    <div class="header-right">
+        <a href="/" class="header-btn">Home</a>
+        <a href="/notifications" class="header-btn">Notifications</a>
+        <a href="/logout" class="header-btn">Logout</a>
+    </div>
+</header>
 
-{{#if photo.tags}}
-Tags: 
-{{#each photo.tags}}
-    <span style="background-color: #e0e0e0; padding: 3px 8px; margin: 2px; border-radius: 3px; display: inline-block;">{{this}}</span>
-{{/each}}
-<br>
-{{else}}
-Tags: None<br>
-{{/if}}
+<div class="content-container">
 
-<img src="/photos/{{photo.filename}}" style="max-width:600px"><br><br>
+    <!-- Photo Card -->
+    <div class="photo-details-card">
+        <img class="photo-details-img" src="/photos/{{photo.filename}}" alt="{{photo.title}}">
+        <div class="photo-details-info">
+            <a href="/edit-photo?pid={{photo.id}}" class="edit-btn">Edit Photo</a>
+            <h2>{{photo.title}}</h2>
+            <p>{{photo.description}}</p>
+            <p><strong>Visibility:</strong> {{photo.visibility}}</p>
 
-<h2>Comments</h2>
+            {{#if photo.tags}}
+                <div class="tags">
+                    {{#each photo.tags}}
+                        <span>{{this}}</span>
+                    {{/each}}
+                </div>
+            {{else}}
+                <p><strong>Tags:</strong> None</p>
+            {{/if}}
+        </div>
+    </div>
 
-{{#if comments}}
-    <ul>
-    {{#each comments}}
-        <li><strong>{{this.username}}:</strong> {{this.text}} <em>({{this.date}})</em></li>
-    {{/each}}
-    </ul>
-{{else}}
-    <p>No comments yet.</p>
-{{/if}}
+    <!-- Comments Section -->
+    <div class="comments-section">
+        <h2>Comments</h2>
 
-<h3>Add a comment</h3>
-<form method="POST" action="/photo-details/{{photo.id}}/comment">
-    <textarea name="text" rows="3" cols="50" required></textarea><br>
-    <button type="submit">Post Comment</button>
-</form>
+        {{#if comments.length}}
+            <ul>
+                {{#each comments}}
+                    <li>
+                        <strong>{{this.username}}:</strong> {{this.text}}
+                        <em>({{this.date}})</em>
+                    </li>
+                {{/each}}
+            </ul>
+        {{else}}
+            <p>No comments yet.</p>
+        {{/if}}
 
-<br>
-<a class="back-link" href="/">Back to Home(NEED TO FIX THIS, GO BACK TO ALBUM NOT HOME)</a>
+        <h3>Add a Comment</h3>
+        <form method="POST" action="/photo-details/{{photo.id}}/comment">
+            <textarea name="text" rows="3" required></textarea>
+            <button type="submit" class="btn-primary">Post Comment</button>
+        </form>
+    </div>
+
+</div>
 
 </body>
