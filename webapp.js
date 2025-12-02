@@ -7,6 +7,7 @@ const path = require('path');
 
 const business = require('./business');
 const auth = require('./auth');
+const email = require('./email'); // email module
 
 const app = express();
 
@@ -113,8 +114,8 @@ app.get('/register', (req, res) => {
 });
 
 app.post('/register', async (req, res) => {
-    const { name, email, username, password } = req.body;
-    const result = await auth.registerUser(name, email, username, password);
+    const { name, email: userEmail, username, password } = req.body;
+    const result = await auth.registerUser(name, userEmail, username, password);
     if (result.success) {
         const sessionID = crypto.randomUUID();
         loggedInUsers[sessionID] = result.user;
@@ -203,14 +204,28 @@ app.get('/photo-details/:pid', ensureLogin, async (req, res) => {
     res.render('view_photo', { photo: photoDetails, user: req.user, comments, layout: undefined });
 });
 
-// Add comment route
+// Add comment route with email notification
 app.post('/photo-details/:pid/comment', ensureLogin, async (req, res) => {
     let photoId = Number(req.params.pid);
     const text = req.body.text;
 
     if (!text || text.trim() === '') return res.redirect(`/photo-details/${photoId}`);
 
+    // Add the comment
     await business.addComment(photoId, req.user.username, text.trim());
+
+    // Notify the photo owner (if not commenting on own photo)
+    const photoDetails = await business.getPhotoDetails(photoId);
+    if (photoDetails && photoDetails.ownerID !== req.user.ownerID) {
+        const ownerUser = await auth.getUserByID(photoDetails.ownerID);
+        const ownerEmail = ownerUser ? ownerUser.email : "unknown@example.com";
+
+        const subject = `New comment on your photo "${photoDetails.title}"`;
+        const body = `${req.user.username} commented: "${text.trim()}"`;
+
+        await email.sendMail(ownerEmail, subject, body);
+    }
+
     res.redirect(`/photo-details/${photoId}`);
 });
 
@@ -266,13 +281,22 @@ app.post('/albums/create', ensureLogin, async (req, res) => {
 
 /**
  * Comment notifications route
+ * Shows simulated email notifications for the logged-in user
  */
 app.get('/notifications', ensureLogin, async (req, res) => {
-    const ownerID = req.user.ownerID;
-    const comments = await business.getCommentsForUserPhotos(ownerID);
+    const userEmail = req.user.email;
+    const notifications = email.getNotifications(userEmail);
 
-    res.render('notifications', { user: req.user, comments, layout: undefined });
+    // Sort by newest first
+    notifications.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+    res.render('notifications', { 
+        user: req.user, 
+        notifications, 
+        layout: undefined 
+    });
 });
+
 
 /**
  * Upload photo - GET route

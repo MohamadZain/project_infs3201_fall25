@@ -22,11 +22,11 @@
 
         <h2>Your Notifications</h2>
 
-        {{#if notifications}}
+        {{#if notifications.length}}
             <ul class="notification-list">
                 {{#each notifications}}
                 <li class="notification-item">
-                    <div class="notif-message">{{this.message}}</div>
+                    <div class="notif-message"><strong>{{this.subject}}</strong>: {{this.body}}</div>
                     <div class="notif-date">{{this.date}}</div>
                 </li>
                 {{/each}}

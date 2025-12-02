@@ -1,3 +1,4 @@
+// auth.js
 const { MongoClient } = require('mongodb');
 const crypto = require('crypto');
 
@@ -15,28 +16,18 @@ async function connectDB() {
     }
 }
 
-/**
- * Hash a password with a given salt using SHA256.
- */
 function hashPassword(password, salt) {
     return crypto.createHash('sha256').update(password + salt).digest('hex');
 }
 
-/**
- * Verify user login credentials.
- */
 async function verifyUser(username, password) {
     await connectDB();
     const user = await userCollection.findOne({ username });
     if (!user) return null;
-
     const hashed = hashPassword(password, user.salt);
     return hashed === user.password ? user : null;
 }
 
-/**
- * Register a new user with auto-incremented ownerID.
- */
 async function registerUser(name, email, username, password) {
     await connectDB();
 
@@ -73,14 +64,9 @@ async function registerUser(name, email, username, password) {
     };
 
     await userCollection.insertOne(newUser);
-
-    // Return the created user object for session usage
     return { success: true, message: 'User registered successfully', user: newUser };
 }
 
-/**
- * Change password for a user
- */
 async function changePassword(username, currentPassword, newPassword) {
     await connectDB();
 
@@ -101,4 +87,12 @@ async function changePassword(username, currentPassword, newPassword) {
     return true;
 }
 
-module.exports = { verifyUser, registerUser, changePassword };
+/**
+ * New helper: get user by ownerID
+ */
+async function getUserByID(ownerID) {
+    await connectDB();
+    return await userCollection.findOne({ ownerID });
+}
+
+module.exports = { verifyUser, registerUser, changePassword, getUserByID };
