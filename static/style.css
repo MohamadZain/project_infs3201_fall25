@@ -214,3 +214,29 @@ ul li img {
         grid-template-columns: 1fr;
     }
 }
+
+/* Input focus effect for login/register pages */
+.login-box input:focus {
+    border-color: #1877f2; /* Facebook-style blue */
+    box-shadow: 0 0 5px rgba(24, 119, 242, 0.5);
+    outline: none;
+}
+
+/* Slightly more spacing between fields */
+.login-box label,
+.login-box input {
+    margin-bottom: 18px; /* increased from 15px */
+}
+
+/* Footer bar stays sticky at the bottom */
+.footer-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background-color: #4267B2; /* Facebook-blue */
+    color: white;
+    text-align: center;
+    padding: 10px 0;
+    font-size: 14px;
+}
