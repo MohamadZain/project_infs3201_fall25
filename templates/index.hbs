@@ -1,36 +1,54 @@
 <!DOCTYPE html>
 <html lang="en">
-<link rel="stylesheet" href="/static/style.css">
-
 <head>
     <meta charset="UTF-8">
     <title>Photo Album</title>
+    <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-    <header>
-        <h1>Photo Album</h1>
-        <nav>
-            {{#if user}}
-                <span>Welcome, {{user.username}}!</span>
-                <a href="/logout">Logout</a>
-            {{else}}
-                <a href="/login">Login</a>
-                <a href="/register">Register</a>
-            {{/if}}
-        </nav>
-    </header>
 
-    <!-- Search Form -->
-    <form method="GET" action="/search" class="search-form">
-        <input type="text" name="q" placeholder="Search photos by title, description, or tag">
-        <button type="submit">Search</button>
-    </form>
+<header class="main-header">
+    <div class="header-left">
+        Logged in as {{user.username}}
+    </div>
+    <div class="header-center">
+        <form method="GET" action="/search" class="search-form">
+            <input type="text" name="q" placeholder="Search photos by title, description, or tag">
+            <button type="submit">Search</button>
+        </form>
+    </div>
+    <div class="header-right">
+        <a href="/change-password" class="header-btn">Change Password</a>
+        <a href="/logout" class="header-btn">Logout</a>
+    </div>
+</header>
 
-    <!-- Albums List -->
-    <ul>
+<div class="photo-grid-container">
+    <!-- Album List -->
+    <ul class="album-list">
         {{#each albums}}
-        <li><a href="/album/{{this.id}}">{{this.name}}</a></li>
+        <li>
+            <a href="/album/{{this.id}}">{{this.name}}</a>
+        </li>
         {{/each}}
     </ul>
+
+    <!-- Photo Grid (optional featured photos) -->
+    <div class="album-grid">
+        {{#each featuredPhotos}}
+        <div class="photo-card">
+            <a href="/photo-details/{{id}}">
+                <img src="/photos/{{filename}}" alt="{{title}}">
+            </a>
+            <p>{{title}}</p>
+        </div>
+        {{/each}}
+    </div>
+</div>
+
+<div class="footer-bar">
+    Project by Umar Sadiq (60302575), Mohamed Zain (60306080), and [Name Pending]
+</div>
+
 </body>
 </html>
