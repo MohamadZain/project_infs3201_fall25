@@ -102,55 +102,97 @@ ul.album-list li a:hover {
     color: #007BFF;
 }
 
-/* ---------------- Album grid ---------------- */
-.album-grid {
+/* ---------------- Album Page ---------------- */
+
+/* Album page container spacing */
+.content-container {
+    max-width: 1200px;
+    margin: 20px auto;
+    padding: 0 20px;
+}
+
+/* Album actions (Upload Photo button) */
+.album-actions {
+    margin-bottom: 20px;
+    text-align: left;
+}
+
+.btn-primary {
+    background-color: #4267B2; /* Facebook blue */
+    color: white;
+    padding: 8px 16px;
+    text-decoration: none;
+    border-radius: 8px;
+    font-weight: bold;
+    transition: background-color 0.3s;
+}
+
+.btn-primary:hover {
+    background-color: #365899;
+}
+
+/* Grid for photos */
+.photo-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 15px;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 20px; /* spacing between images */
     margin-top: 20px;
 }
 
 /* Individual photo card */
 .photo-card {
-    text-align: center;
     background-color: #fff;
-    padding: 10px;
     border-radius: 12px;
-    box-shadow: 0 3px 8px rgba(0,0,0,0.1);
+    overflow: hidden;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
     transition: transform 0.3s, box-shadow 0.3s;
 }
 
 .photo-card:hover {
-    transform: scale(1.05);
-    box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+    transform: scale(1.03);
+    box-shadow: 0 8px 16px rgba(0,0,0,0.2);
 }
 
+/* Image styling */
 .photo-card img {
     width: 100%;
-    height: 200px;
-    object-fit: cover;
-    border-radius: 8px;
+    height: 220px; /* slightly taller for better display */
+    object-fit: cover; /* crop nicely */
+    border-bottom: 1px solid #ddd; /* separation from info */
 }
 
-.photo-card p {
-    margin-top: 8px;
+/* Photo info below image */
+.photo-info {
+    padding: 10px;
+    text-align: left;
+}
+
+.photo-info h3 {
+    margin: 0 0 5px 0;
+    font-size: 16px;
     font-weight: bold;
 }
 
-/* ---------------- Back link ---------------- */
-.back-link {
-    display: inline-block;
-    margin-top: 20px;
-    padding: 8px 16px;
-    background-color: #4267B2;
-    color: white;
-    text-decoration: none;
-    border-radius: 8px;
-    transition: background-color 0.3s;
+.photo-info p {
+    margin: 0 0 5px 0;
+    font-size: 14px;
+    color: #555;
 }
 
-.back-link:hover {
-    background-color: #365899;
+/* Tags styling */
+.tags span {
+    display: inline-block;
+    background-color: #e0e0e0;
+    color: #333;
+    padding: 2px 6px;
+    margin: 2px 2px 0 0;
+    border-radius: 3px;
+    font-size: 12px;
+}
+
+/* Remove back to home button as requested */
+.back-link {
+    display: none;
 }
 
 /* ---------------- Login Page ---------------- */
@@ -233,4 +275,58 @@ ul.album-list li a:hover {
     text-align: center;
     padding: 10px 0;
     font-size: 14px;
+}
+
+/* ---------------- Responsive tweaks ---------------- */
+@media (max-width: 768px) {
+    .photo-card img {
+        height: 160px;
+    }
+}
+
+/* ---------------- Upload Photo Form ---------------- */
+.upload-form {
+    max-width: 600px;
+    margin: 20px auto;
+    background-color: #fff;
+    padding: 25px 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.upload-form label {
+    font-weight: bold;
+    margin-bottom: 5px;
+    display: block;
+}
+
+.upload-form input[type="text"],
+.upload-form input[type="file"],
+.upload-form textarea,
+.upload-form select {
+    width: 100%;
+    padding: 10px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    font-size: 14px;
+    box-sizing: border-box;
+}
+
+.upload-form textarea {
+    resize: vertical;
+}
+
+.upload-form button.btn-primary {
+    align-self: flex-start;
+    padding: 10px 20px;
+    font-size: 16px;
+}
+
+.error-message {
+    color: red;
+    font-weight: bold;
+    text-align: center;
 }

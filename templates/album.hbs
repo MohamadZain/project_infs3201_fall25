@@ -1,26 +1,50 @@
 <link rel="stylesheet" href="/static/style.css">
 
-<h1>Photos in {{album.name}} ({{count}} photos)</h1>
-
-<a href="/album/{{album.id}}/upload" class="upload-link">Upload Photo</a>
-
-<div class="album-grid">
-    {{#each photos}}
-    <div class="photo-card">
-        <a href="/photo-details/{{id}}">
-            <img src="/photos/{{filename}}" alt="{{title}}" />
-        </a>
-        <p>{{title}}</p>
-        {{#if tags}}
-        <div style="font-size: 12px; color: #666;">
-            Tags: 
-            {{#each tags}}
-                <span style="background-color: #e0e0e0; padding: 2px 6px; margin: 1px; border-radius: 3px; display: inline-block;">{{this}}</span>
-            {{/each}}
-        </div>
-        {{/if}}
+<header class="main-header">
+    <div class="header-left">
+        Photos in {{album.name}} ({{count}} photos)
     </div>
-    {{/each}}
-</div>
+    <div class="header-center">
+        <form class="search-form" action="/search" method="GET">
+            <input type="text" name="q" placeholder="Search photos..." />
+            <button type="submit">Search</button>
+        </form>
+    </div>
+    <div class="header-right">
+        <a href="/" class="header-btn">Home</a>
+        <a href="/notifications" class="header-btn">Notifications</a>
+        <a href="/logout" class="header-btn">Logout</a>
+    </div>
+</header>
 
-<a class="back-link" href="/">Back to Home</a>
+
+<!-- Page content -->
+<main class="content-container">
+
+    <div class="album-actions">
+        <a href="/album/{{album.id}}/upload" class="btn-primary">Upload Photo</a>
+    </div>
+
+    <div class="photo-grid">
+        {{#each photos}}
+        <div class="photo-card">
+            <a href="/photo-details/{{id}}">
+                <img src="/photos/{{filename}}" alt="{{title}}" class="photo-grid-img" />
+            </a>
+            <div class="photo-info">
+                <h3>{{title}}</h3>
+                {{#if description}}
+                <p>{{description}}</p>
+                {{/if}}
+                {{#if tags}}
+                <div class="tags">
+                    {{#each tags}}
+                        <span>{{this}}</span>
+                    {{/each}}
+                </div>
+                {{/if}}
+            </div>
+        </div>
+        {{/each}}
+    </div>
+</main>

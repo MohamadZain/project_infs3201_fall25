@@ -1,20 +1,49 @@
 <link rel="stylesheet" href="/static/style.css">
 
-<h1>Search Results</h1>
+<header class="main-header">
+    <div class="header-left">
+        Search Results
+    </div>
+    <div class="header-center">
+        <form class="search-form" action="/search" method="GET">
+            <input type="text" name="q" placeholder="Search photos..." value="{{query}}">
+            <button type="submit">Search</button>
+        </form>
+    </div>
+    <div class="header-right">
+        <a href="/" class="header-btn">Home</a>
+        <a href="/notifications" class="header-btn">Notifications</a>
+        <a href="/logout" class="header-btn">Logout</a>
+    </div>
+</header>
 
-{{#if photos.length}}
-    <div class="album-grid">
+<main class="content-container">
+
+    {{#if photos.length}}
+    <div class="photo-grid">
         {{#each photos}}
         <div class="photo-card">
             <a href="/photo-details/{{id}}">
-                <img src="/photos/{{filename}}" alt="{{title}}">
+                <img src="/photos/{{filename}}" alt="{{title}}" class="photo-grid-img" />
             </a>
-            <p>{{title}}</p>
+            <div class="photo-info">
+                <h3>{{title}}</h3>
+                {{#if description}}
+                <p>{{description}}</p>
+                {{/if}}
+                {{#if tags}}
+                <div class="tags">
+                    {{#each tags}}
+                        <span>{{this}}</span>
+                    {{/each}}
+                </div>
+                {{/if}}
+            </div>
         </div>
         {{/each}}
     </div>
-{{else}}
-    <p>No photos found.</p>
-{{/if}}
+    {{else}}
+    <p style="text-align:center; margin-top: 20px;">No photos found for "{{query}}"</p>
+    {{/if}}
 
-<a class="back-link" href="/">Back to Home</a>
+</main>

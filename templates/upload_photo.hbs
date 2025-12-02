@@ -1,32 +1,46 @@
 <link rel="stylesheet" href="/static/style.css">
 
-<h1>Upload Photo to {{album.name}}</h1>
+<header class="main-header">
+    <div class="header-left">
+        Upload Photo to {{album.name}}
+    </div>
+    <div class="header-center">
+        <form class="search-form" action="/search" method="GET">
+            <input type="text" name="q" placeholder="Search photos..." />
+            <button type="submit">Search</button>
+        </form>
+    </div>
+    <div class="header-right">
+        <a href="/" class="header-btn">Home</a>
+        <a href="/notifications" class="header-btn">Notifications</a>
+        <a href="/logout" class="header-btn">Logout</a>
+    </div>
+</header>
 
-{{#if error}}
-<p style="color:red">{{error}}</p>
-{{/if}}
+<main class="content-container">
+    {{#if error}}
+    <p class="error-message">{{error}}</p>
+    {{/if}}
 
-<form method="POST" action="/album/{{album.id}}/upload" enctype="multipart/form-data">
-    <label>Select Photo:</label><br>
-    <input type="file" name="photo" accept="image/*" required><br><br>
-    
-    <label>Title:</label><br>
-    <input type="text" name="title" placeholder="Enter photo title"><br><br>
-    
-    <label>Description:</label><br>
-    <textarea name="description" rows="4" cols="50" placeholder="Enter photo description"></textarea><br><br>
-    
-    <label>Tags (separate with commas):</label><br>
-    <input type="text" name="tags" placeholder="e.g. nature, sunset, beach"><br><br>
-    
-    <label>Visibility:</label><br>
-    <select name="visibility">
-        <option value="private" selected>Private</option>
-        <option value="public">Public</option>
-    </select><br><br>
-    
-    <button type="submit">Upload Photo</button>
-</form>
+    <form class="upload-form" method="POST" action="/album/{{album.id}}/upload" enctype="multipart/form-data">
+        <label>Select Photo:</label>
+        <input type="file" name="photo" accept="image/*" required>
 
-<br>
-<a href="/album/{{album.id}}">Back to Album</a>
+        <label>Title:</label>
+        <input type="text" name="title" placeholder="Enter photo title">
+
+        <label>Description:</label>
+        <textarea name="description" rows="4" placeholder="Enter photo description"></textarea>
+
+        <label>Tags (separate with commas):</label>
+        <input type="text" name="tags" placeholder="e.g. nature, sunset, beach">
+
+        <label>Visibility:</label>
+        <select name="visibility">
+            <option value="private" selected>Private</option>
+            <option value="public">Public</option>
+        </select>
+
+        <button type="submit" class="btn-primary">Upload Photo</button>
+    </form>
+</main>
