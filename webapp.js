@@ -124,6 +124,48 @@ app.post('/register', async (req, res) => {
         res.render('register', { error: result.message, layout: undefined });
     }
 });
+// GET change password page
+app.get('/change-password', ensureLogin, (req, res) => {
+    res.render('change_password', { user: req.user, layout: undefined });
+});
+
+// POST change password
+app.post('/change-password', ensureLogin, async (req, res) => {
+    const { currentPassword, newPassword, confirmPassword } = req.body;
+
+    if (!currentPassword || !newPassword || !confirmPassword) {
+        return res.render('change_password', { 
+            user: req.user, 
+            error: 'All fields are required', 
+            layout: undefined 
+        });
+    }
+
+    if (newPassword !== confirmPassword) {
+        return res.render('change_password', { 
+            user: req.user, 
+            error: 'New passwords do not match', 
+            layout: undefined 
+        });
+    }
+
+    const success = await auth.changePassword(req.user.username, currentPassword, newPassword);
+
+    if (success) {
+        res.render('change_password', { 
+            user: req.user, 
+            message: 'Password successfully changed!', 
+            layout: undefined 
+        });
+    } else {
+        res.render('change_password', { 
+            user: req.user, 
+            error: 'Current password is incorrect', 
+            layout: undefined 
+        });
+    }
+});
+
 
 /**
  * Album page
