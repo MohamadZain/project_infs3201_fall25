@@ -1,4 +1,4 @@
-// persistence.js - FINAL BULLETPROOF VERSION - WILL NEVER CRASH
+// persistence.js - FINAL BULLETPROOF VERSION
 const mongodb = require('mongodb');
 
 let client = undefined;
@@ -7,6 +7,10 @@ let photoCollection = undefined;
 let albumCollection = undefined;
 let commentCollection = undefined;
 
+/**
+ * Connect to MongoDB if not already connected.
+ * @returns {Promise<void>}
+ */
 async function connectDatabase() {
     if (client && client.topology && client.topology.isConnected()) {
         return; // Already connected
@@ -16,11 +20,11 @@ async function connectDatabase() {
         client = new mongodb.MongoClient('mongodb+srv://student:12class34@cluster1.sjh42tn.mongodb.net/');
         await client.connect();
         db = client.db('infs3201_fall2025');
-        
+
         photoCollection = db.collection('photos');
         albumCollection = db.collection('albums');
         commentCollection = db.collection('comments');
-        
+
         console.log("Connected to MongoDB successfully");
     } catch (err) {
         console.error("Failed to connect to MongoDB:", err);
@@ -28,6 +32,10 @@ async function connectDatabase() {
     }
 }
 
+/**
+ * Close MongoDB connection.
+ * @returns {Promise<void>}
+ */
 async function close() {
     if (client) {
         await client.close();
@@ -39,28 +47,51 @@ async function close() {
     }
 }
 
+/**
+ * Get album details by ID.
+ * @param {number|string} albumId
+ * @returns {Promise<Object|null>}
+ */
 async function getAlbumDetails(albumId) {
     await connectDatabase();
     return await albumCollection.findOne({ id: albumId });
 }
 
+/**
+ * Get album details by name.
+ * @param {string} name
+ * @returns {Promise<Object|null>}
+ */
 async function getAlbumDetailsByName(name) {
     await connectDatabase();
     return await albumCollection.findOne({ name });
 }
 
+/**
+ * Get photo details by ID.
+ * @param {number|string} photoId
+ * @returns {Promise<Object|null>}
+ */
 async function getPhotoDetails(photoId) {
     await connectDatabase();
     return await photoCollection.findOne({ id: photoId });
 }
 
+/**
+ * Get all photos in an album.
+ * @param {number|string} albumId
+ * @returns {Promise<Array>}
+ */
 async function getPhotosInAlbum(albumId) {
     await connectDatabase();
     const cursor = photoCollection.find({ albums: albumId });
     return await cursor.toArray();
 }
 
-// FIXED & BULLETPROOF — NEVER CRASHES
+/**
+ * Get all albums.
+ * @returns {Promise<Array>} List of all albums or empty array.
+ */
 async function getAlbums() {
     await connectDatabase();
     try {
@@ -72,19 +103,31 @@ async function getAlbums() {
     }
 }
 
+/**
+ * Update photo details including tags.
+ * @param {number|string} pid - Photo ID
+ * @param {string} title
+ * @param {string} description
+ * @param {string} visibility
+ * @param {Array} tags
+ * @returns {Promise<boolean>} True if modified successfully
+ */
 async function updatePhoto(pid, title, description, visibility, tags) {
     await connectDatabase();
     const updateObj = { title, description, visibility };
     if (tags !== undefined) {
         updateObj.tags = tags;
     }
-    const res = await photoCollection.updateOne(
-        { id: pid },
-        { $set: updateObj }
-    );
+    const res = await photoCollection.updateOne({ id: pid }, { $set: updateObj });
     return res.modifiedCount === 1;
 }
 
+/**
+ * Add a tag to a photo if it doesn't exist.
+ * @param {number|string} pid - Photo ID
+ * @param {string} tag
+ * @returns {Promise<boolean>} True if tag added successfully
+ */
 async function addTag(pid, tag) {
     await connectDatabase();
     const photo = await getPhotoDetails(pid);
@@ -101,18 +144,27 @@ async function addTag(pid, tag) {
     if (exists) return false;
 
     photo.tags.push(tag);
-    const res = await photoCollection.updateOne(
-        { id: pid },
-        { $set: { tags: photo.tags } }
-    );
+    const res = await photoCollection.updateOne({ id: pid }, { $set: { tags: photo.tags } });
     return res.modifiedCount === 1;
 }
 
+/**
+ * Get all comments for a photo.
+ * @param {number|string} photoId
+ * @returns {Promise<Array>}
+ */
 async function getComments(photoId) {
     await connectDatabase();
     return await commentCollection.find({ photoId }).toArray();
 }
 
+/**
+ * Add a comment to a photo.
+ * @param {number|string} photoId
+ * @param {string} username
+ * @param {string} text
+ * @returns {Promise<boolean>}
+ */
 async function addComment(photoId, username, text) {
     await connectDatabase();
     const newComment = { photoId, username, text, date: new Date() };
@@ -120,6 +172,12 @@ async function addComment(photoId, username, text) {
     return true;
 }
 
+/**
+ * Create a new album with auto-incremented ID.
+ * @param {string} name
+ * @param {number|string} ownerID
+ * @returns {Promise<Object>} Newly created album
+ */
 async function createAlbum(name, ownerID) {
     await connectDatabase();
     const counterColl = db.collection('counters');
@@ -135,6 +193,11 @@ async function createAlbum(name, ownerID) {
     return newAlbum;
 }
 
+/**
+ * Create a new photo with auto-incremented ID.
+ * @param {Object} photoData
+ * @returns {Promise<Object>} Newly created photo
+ */
 async function createPhoto(photoData) {
     await connectDatabase();
     const counterColl = db.collection('counters');

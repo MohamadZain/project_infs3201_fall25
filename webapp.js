@@ -1,31 +1,52 @@
-// webapp.js - FINAL VERSION - EVERYTHING WORKS
+// webapp.js 
 const express = require('express');
 const handlebars = require('express-handlebars');
 const crypto = require('crypto');
 const fileUpload = require('express-fileupload');
 const path = require('path');
 
-const business = require('./business');
-const auth = require('./auth');
-const email = require('./email');
+const business = require('./business');  // Handles database/photo operations
+const auth = require('./auth');          // Handles user authentication
+const email = require('./email');        // Handles email notifications
 
 const app = express();
 
+/**
+ * Set up Handlebars as the view engine
+ */
 app.set('views', __dirname + "/templates");
 app.set('view engine', 'hbs');
 app.engine('hbs', handlebars.engine({
     helpers: {
+        /**
+         * Handlebars helper to check equality
+         * @param {*} a 
+         * @param {*} b 
+         * @returns {boolean}
+         */
         eq: function(a, b) { return a === b; }
     }
 }));
 
-app.use(express.urlencoded({ extended: true }));
-app.use('/static', express.static(__dirname + "/static"));
-app.use('/photos', express.static(__dirname + "/photos"));
-app.use(fileUpload({ limits: { fileSize: 50 * 1024 * 1024 } }));
+/**
+ * Middleware
+ */
+app.use(express.urlencoded({ extended: true })); 
+app.use('/static', express.static(__dirname + "/static")); 
+app.use('/photos', express.static(__dirname + "/photos")); 
+app.use(fileUpload({ limits: { fileSize: 50 * 1024 * 1024 } })); // Max 50MB file upload
 
+/**
+ * In-memory store for logged-in users (sessionID -> user object)
+ * @type {Object.<string, Object>}
+ */
 const loggedInUsers = {};
 
+/**
+ * Parse cookies from request headers
+ * @param {express.Request} req 
+ * @returns {Object.<string,string>} Parsed cookies
+ */
 function parseCookies(req) {
     const list = {};
     const rc = req.headers.cookie;
@@ -37,6 +58,12 @@ function parseCookies(req) {
     return list;
 }
 
+/**
+ * Middleware to ensure the user is logged in
+ * @param {express.Request} req 
+ * @param {express.Response} res 
+ * @param {function} next 
+ */
 function ensureLogin(req, res, next) {
     const cookies = parseCookies(req);
     const sessionID = cookies.sessionID;
@@ -49,6 +76,9 @@ function ensureLogin(req, res, next) {
 
 // ==================== ROUTES ====================
 
+/**
+ * Homepage - display albums and user's comment count
+ */
 app.get('/', ensureLogin, async (req, res) => {
     let albumList = await business.getAlbums();
     const comments = await business.getCommentsForUserPhotos(req.user.ownerID);
@@ -56,8 +86,14 @@ app.get('/', ensureLogin, async (req, res) => {
     res.render('index', { albums: albumList, user: req.user, commentCount, layout: undefined });
 });
 
+/**
+ * Login page
+ */
 app.get('/login', (req, res) => res.render('login', { layout: undefined }));
 
+/**
+ * Process login form
+ */
 app.post('/login', async (req, res) => {
     const { username, password } = req.body;
     const user = await auth.verifyUser(username, password);
@@ -71,6 +107,9 @@ app.post('/login', async (req, res) => {
     }
 });
 
+/**
+ * Logout the user and clear session
+ */
 app.get('/logout', (req, res) => {
     const cookies = parseCookies(req);
     const sessionID = cookies.sessionID;
@@ -79,8 +118,14 @@ app.get('/logout', (req, res) => {
     res.redirect('/login');
 });
 
+/**
+ * Registration page
+ */
 app.get('/register', (req, res) => res.render('register', { layout: undefined }));
 
+/**
+ * Process registration form
+ */
 app.post('/register', async (req, res) => {
     const { name, email: userEmail, username, password } = req.body;
     const result = await auth.registerUser(name, userEmail, username, password);
@@ -94,10 +139,16 @@ app.post('/register', async (req, res) => {
     }
 });
 
+/**
+ * Change password page
+ */
 app.get('/change-password', ensureLogin, (req, res) => {
     res.render('change_password', { user: req.user, layout: undefined });
 });
 
+/**
+ * Process change password form
+ */
 app.post('/change-password', ensureLogin, async (req, res) => {
     const { currentPassword, newPassword, confirmPassword } = req.body;
     if (!currentPassword || !newPassword || !confirmPassword) {
@@ -114,22 +165,38 @@ app.post('/change-password', ensureLogin, async (req, res) => {
     }
 });
 
+/**
+ * Album page – FIXED: now handles deleted/missing albums gracefully
+ */
 app.get('/album/:aid', ensureLogin, async (req, res) => {
     let albumId = Number(req.params.aid);
     let albumDetails = await business.getAlbumDetails(albumId);
+    
+    if (!albumDetails) {
+        return res.status(404).send("<h2>Album not found or has been deleted.</h2><a href='/'>Back to Home</a>");
+    }
+
     let visiblePhotos = await business.getPhotosInAlbum(albumId, req.user);
     res.render('album', { album: albumDetails, photos: visiblePhotos, count: visiblePhotos.length, user: req.user, layout: undefined });
 });
 
+/**
+ * Photo details page – FIXED: now handles deleted/missing photos + private access
+ */
 app.get('/photo-details/:pid', ensureLogin, async (req, res) => {
     let photoId = Number(req.params.pid);
     let photoDetails = await business.getPhotoDetails(photoId);
-    if (!photoDetails) return res.send("Photo not found.");
-    if (photoDetails.visibility === "private" && photoDetails.ownerID !== req.user.ownerID) {
-        return res.send("This photo is private.");
+
+    // Handle non-existent photo
+    if (!photoDetails) {
+        return res.status(404).send("<h2>Photo not found or has been deleted.</h2><a href='/'>Back to Home</a>");
     }
 
-    // ADD OWNER USERNAME TO PHOTO
+    // Handle private photo access
+    if (photoDetails.visibility === "private" && photoDetails.ownerID !== req.user.ownerID) {
+        return res.status(403).send("<h2>This photo is private.</h2><a href='/'>Back to Home</a>");
+    }
+
     const owner = await auth.getUserByID(photoDetails.ownerID);
     photoDetails.ownerUsername = owner ? owner.username : "Unknown";
 
@@ -137,6 +204,9 @@ app.get('/photo-details/:pid', ensureLogin, async (req, res) => {
     res.render('view_photo', { photo: photoDetails, user: req.user, comments, layout: undefined });
 });
 
+/**
+ * Add a comment to a photo
+ */
 app.post('/photo-details/:pid/comment', ensureLogin, async (req, res) => {
     let photoId = Number(req.params.pid);
     const text = req.body.text?.trim();
@@ -152,17 +222,17 @@ app.post('/photo-details/:pid/comment', ensureLogin, async (req, res) => {
     res.redirect(`/photo-details/${photoId}`);
 });
 
+/**
+ * Edit photo page (owner only)
+ */
 app.get('/edit-photo', ensureLogin, async (req, res) => {
     let photoId = Number(req.query.pid);
     let photoDetails = await business.getPhotoDetails(photoId);
     if (!photoDetails || photoDetails.ownerID !== req.user.ownerID) {
-        return res.send('Access denied or photo not found');
+        return res.status(403).send('Access denied or photo not found');
     }
 
-    let tagsString = '';
-    if (photoDetails.tags && photoDetails.tags.length > 0) {
-        tagsString = photoDetails.tags.join(', ');
-    }
+    let tagsString = photoDetails.tags ? photoDetails.tags.join(', ') : '';
     photoDetails.tagsString = tagsString;
     photoDetails.selectPrivate = (photoDetails.visibility === "private") ? "selected" : "";
     photoDetails.selectPublic  = (photoDetails.visibility === "public")  ? "selected" : "";
@@ -170,6 +240,9 @@ app.get('/edit-photo', ensureLogin, async (req, res) => {
     res.render('edit_photo', { photo: photoDetails, user: req.user, layout: undefined });
 });
 
+/**
+ * Process photo edit (owner only)
+ */
 app.post('/edit-photo', ensureLogin, async (req, res) => {
     let photoId = Number(req.body.id);
     let photoDetails = await business.getPhotoDetails(photoId);
@@ -186,19 +259,28 @@ app.post('/edit-photo', ensureLogin, async (req, res) => {
     res.redirect(`/photo-details/${photoId}`);
 });
 
+/**
+ * Notifications page
+ */
 app.get('/notifications', ensureLogin, async (req, res) => {
     const notifications = email.getNotifications(req.user.email);
     notifications.sort((a, b) => new Date(b.date) - new Date(a.date));
     res.render('notifications', { user: req.user, notifications, layout: undefined });
 });
 
+/**
+ * Upload photo page
+ */
 app.get('/album/:aid/upload', ensureLogin, async (req, res) => {
     let albumId = Number(req.params.aid);
     let albumDetails = await business.getAlbumDetails(albumId);
-    if (!albumDetails) return res.send('Album not found');
+    if (!albumDetails) return res.status(404).send("Album not found");
     res.render('upload_photo', { album: albumDetails, user: req.user, layout: undefined });
 });
 
+/**
+ * Process photo upload
+ */
 app.post('/album/:aid/upload', ensureLogin, async (req, res) => {
     let albumId = Number(req.params.aid);
     let albumDetails = await business.getAlbumDetails(albumId);
@@ -228,6 +310,9 @@ app.post('/album/:aid/upload', ensureLogin, async (req, res) => {
     });
 });
 
+/**
+ * Search photos (public only)
+ */
 app.get('/search', ensureLogin, async (req, res) => {
     const q = (req.query.q || '').trim().toLowerCase();
     if (!q) return res.render('search_results', { photos: [], user: req.user, layout: undefined });

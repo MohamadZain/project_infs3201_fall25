@@ -19,6 +19,7 @@ function formatDate(iso) {
 /**
  * Prompt user for a photo ID, fetch and display its details
  * Includes filename, title, date, albums, and tags
+ * @returns {Promise<void>}
  */
 async function findPhoto() {
     console.log('\n\n')
@@ -30,9 +31,6 @@ async function findPhoto() {
         console.log(` Title: ${photoDetails.title}`)
         console.log(` Date: ${formatDate(photoDetails.date)}`)
 
-        /**
-         * Collect album names for the photo
-         */
         const albumList = []
         for (let aid of photoDetails.albums || []) {
             const ad = await business.getAlbumDetails(aid)
@@ -73,6 +71,7 @@ function promptField(fieldName, current) {
 
 /**
  * Prompt user for a photo ID and update its title/description
+ * @returns {Promise<void>}
  */
 async function updatePhotoDetails() {
     console.log('\n\n')
@@ -95,6 +94,7 @@ async function updatePhotoDetails() {
 
 /**
  * Prompt user for album name and display all photos in that album
+ * @returns {Promise<void>}
  */
 async function albumPhotos() {
     console.log('\n\n')
@@ -109,9 +109,6 @@ async function albumPhotos() {
     console.log('filename,resolution,tags')
 
     for (let p of photos) {
-        /**
-         * Join tags into a string if present
-         */
         let tags = ''
         if (p.tags) {
             for (let i = 0; i < p.tags.length; i++) {
@@ -126,6 +123,7 @@ async function albumPhotos() {
 
 /**
  * Prompt user for photo ID and add a new tag
+ * @returns {Promise<void>}
  */
 async function tagPhoto() {
     console.log('\n\n')
@@ -171,6 +169,7 @@ function getMenuSelection() {
 /**
  * Main application loop for photo management
  * Loops until user chooses to exit
+ * @returns {Promise<void>}
  */
 async function photoApplication() {
     while (true) {
