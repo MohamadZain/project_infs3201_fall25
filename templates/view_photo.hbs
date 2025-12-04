@@ -1,10 +1,5 @@
-<head>
-    <link rel="stylesheet" href="/static/style.css">
-</head>
+<link rel="stylesheet" href="/static/style.css">
 
-<body>
-
-<!-- Main Header -->
 <header class="main-header">
     <div class="header-left">Photo Details</div>
     <div class="header-center">
@@ -20,53 +15,100 @@
     </div>
 </header>
 
-<div class="content-container">
+<main class="content-container">
 
-    <!-- Photo Card -->
     <div class="photo-details-card">
-        <img class="photo-details-img" src="/photos/{{photo.filename}}" alt="{{photo.title}}">
-        <div class="photo-details-info">
-            <a href="/edit-photo?pid={{photo.id}}" class="edit-btn">Edit Photo</a>
-            <h2>{{photo.title}}</h2>
-            <p>{{photo.description}}</p>
-            <p><strong>Visibility:</strong> {{photo.visibility}}</p>
 
-            {{#if photo.tags}}
-                <div class="tags">
-                    {{#each photo.tags}}
-                        <span>{{this}}</span>
-                    {{/each}}
+        <!-- PHOTO -->
+        <img class="photo-details-img" src="/photos/{{photo.filename}}" alt="{{photo.title}}">
+
+        <div class="photo-details-info">
+
+            <!-- EDIT BUTTON (only for owner) -->
+            {{#if (eq photo.ownerID user.ownerID)}}
+                <div style="margin-bottom:20px;">
+                    <a href="/edit-photo?pid={{photo.id}}" class="edit-btn">Edit Photo</a>
+                </div>
+            {{/if}}
+
+            <!-- TITLE -->
+            <h2 style="margin:0 0 12px 0; font-size:28px; color:#1c1e21;">{{photo.title}}</h2>
+
+            <!-- OWNER — CLEAN & SEXY -->
+            <div style="display:flex; align-items:center; gap:10px; margin:15px 0; padding:12px; background:#f0f2f5; border-radius:12px; font-size:15px;">
+                <strong>Owner:</strong>
+                <span style="color:#4267B2; font-weight:bold;">{{photo.ownerUsername}}</span>
+            </div>
+
+            <!-- DESCRIPTION -->
+            {{#if photo.description}}
+                <p style="font-size:16px; line-height:1.5; color:#1c1e21; margin:20px 0;">
+                    {{photo.description}}
+                </p>
+            {{/if}}
+
+            <!-- VISIBILITY -->
+            <div style="margin:18px 0;">
+                <strong>Visibility:</strong>
+                <span style="padding:6px 12px; border-radius:20px; background:#e7f3ff; color:#1877f2; font-weight:bold;">
+                    {{photo.visibility}}
+                </span>
+            </div>
+
+            <!-- TAGS — NOW LOOKS FIRE -->
+            {{#if photo.tags.length}}
+                <div style="margin:20px 0;">
+                    <strong style="display:block; margin-bottom:10px; color:#333;">Tags:</strong>
+                    <div class="tags" style="display:flex; flex-wrap:wrap; gap:8px;">
+                        {{#each photo.tags}}
+                            <span style="
+                                background:#e7f3ff;
+                                color:#1877f2;
+                                padding:8px 14px;
+                                border-radius:20px;
+                                font-size:14px;
+                                font-weight:600;
+                                border:1px solid #aed9ff;
+                            ">
+                                #{{this}}
+                            </span>
+                        {{/each}}
+                    </div>
                 </div>
             {{else}}
-                <p><strong>Tags:</strong> None</p>
+                <p style="color:#888; font-style:italic;">No tags</p>
             {{/if}}
+
         </div>
     </div>
 
-    <!-- Comments Section -->
-    <div class="comments-section">
-        <h2>Comments</h2>
+    <!-- COMMENTS SECTION -->
+    <div class="comments-section" style="margin-top:40px;">
+        <h2 style="color:#1c1e21; border-bottom:2px solid #ddd; padding-bottom:10px;">Comments</h2>
 
         {{#if comments.length}}
-            <ul>
+            <ul style="list-style:none; padding:0; margin:20px 0;">
                 {{#each comments}}
-                    <li>
-                        <strong>{{this.username}}:</strong> {{this.text}}
-                        <em>({{this.date}})</em>
+                    <li style="background:#f8f9fa; padding:15px; border-radius:12px; margin-bottom:12px; border-left:4px solid #4267B2;">
+                        <div style="font-weight:bold; color:#4267B2;">{{this.username}}</div>
+                        <div style="margin:8px 0; font-size:15px;">{{this.text}}</div>
+                        <div style="font-size:12px; color:#888;">{{this.date}}</div>
                     </li>
                 {{/each}}
             </ul>
         {{else}}
-            <p>No comments yet.</p>
+            <p style="color:#888; font-style:italic; padding:20px 0;">No comments yet. Be the first!</p>
         {{/if}}
 
-        <h3>Add a Comment</h3>
-        <form method="POST" action="/photo-details/{{photo.id}}/comment">
-            <textarea name="text" rows="3" required></textarea>
-            <button type="submit" class="btn-primary">Post Comment</button>
-        </form>
+        <div style="margin-top:30px;">
+            <form method="POST" action="/photo-details/{{photo.id}}/comment">
+                <textarea name="text" rows="4" required placeholder="Write a comment..." 
+                          style="width:100%; padding:12px; border-radius:12px; border:1px solid #ccc; font-size:15px; resize:vertical;"></textarea>
+                <button type="submit" class="btn-primary" style="margin-top:10px; padding:12px 24px; font-size:16px;">
+                    Post Comment
+                </button>
+            </form>
+        </div>
     </div>
 
-</div>
-
-</body>
+</main>

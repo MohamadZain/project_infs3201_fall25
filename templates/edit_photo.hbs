@@ -16,23 +16,33 @@
 </header>
 
 <main class="content-container">
+    <div class="edit-form">
+        <h2>Edit Photo</h2>
 
-    <form method="POST" class="edit-form">
-        <input name="id" value="{{photo.id}}" type="hidden">
+        <form method="POST" action="/edit-photo">
+            <input type="hidden" name="id" value="{{photo.id}}">
 
-        <label>Title</label>
-        <input name="title" value="{{photo.title}}" required>
+            <label>Title</label>
+            <input type="text" name="title" value="{{photo.title}}" required>
 
-        <label>Description</label>
-        <textarea name="description" rows="3">{{photo.description}}</textarea>
+            <label>Description</label>
+            <textarea name="description" rows="4">{{photo.description}}</textarea>
 
-        <label>Visibility</label>
-        <select name="visibility">
-            <option value="private" {{photo.selectPrivate}}>Private</option>
-            <option value="public" {{photo.selectPublic}}>Public</option>
-        </select>
+            <label>Tags (comma-separated)</label>
+            <input type="text" name="tags" value="{{photo.tagsString}}" placeholder="e.g. vacation, beach, family">
 
-        <button type="submit" class="btn-primary">Save Changes</button>
-    </form>
+            <label>Visibility</label>
+            <select name="visibility">
+                <option value="private" {{photo.selectPrivate}}>Private</option>
+                <option value="public" {{photo.selectPublic}}>Public</option>
+            </select>
 
+            <div style="margin-top: 20px;">
+                <button type="submit" class="btn-primary">Save Changes</button>
+                <a href="/photo-details/{{photo.id}}" class="btn-primary" style="margin-left:10px; background:#777; text-decoration:none; padding:10px 16px; display:inline-block;">
+                    Cancel
+                </a>
+            </div>
+        </form>
+    </div>
 </main>

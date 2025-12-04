@@ -68,25 +68,28 @@ body {
 
 /* ---------------- Albums List ---------------- */
 ul.album-list {
-    list-style: none; /* remove bullet points */
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    max-width: 400px; /* keep list to left side */
-    padding-left: 0;
-    margin-left: 20px; /* push from left edge */
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr); /* 3 boxes per row */
+    gap: 20px;
+    padding: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
 }
 
 ul.album-list li {
     background-color: #fff;
-    padding: 15px;
+    height: 180px;            /* Make the box bigger (square-ish) */
     border-radius: 12px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 ul.album-list li:hover {
-    transform: translateY(-3px) scale(1.02);
+    transform: scale(1.05);
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
 }
 
@@ -94,12 +97,7 @@ ul.album-list li a {
     text-decoration: none;
     color: #333;
     font-weight: bold;
-    display: block;
-    font-size: 1.1rem;
-}
-
-ul.album-list li a:hover {
-    color: #007BFF;
+    font-size: 1.3rem;
 }
 
 /* ---------------- Album Page ---------------- */
@@ -481,4 +479,22 @@ ul.album-list li a:hover {
     color: #666;
     font-size: 15px;
     padding: 10px;
+}
+
+/* Notification Badge — CLEAN, uses CSS class only */
+.notification-badge {
+    position: absolute;
+    top: -10px;
+    right: -10px;
+    background: #e74c3c;
+    color: white;
+    font-weight: bold;
+    font-size: 12px;
+    min-width: 20px;
+    height: 20px;
+    line-height: 20px;
+    border-radius: 50%;
+    text-align: center;
+    border: 3px solid white;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
 }

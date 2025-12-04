@@ -1,3 +1,4 @@
+// business.js
 const persistence = require('./persistence');
 
 async function getAlbums() {
@@ -27,8 +28,9 @@ async function getPhotoDetails(photoId) {
     return await persistence.getPhotoDetails(photoId);
 }
 
-async function updatePhoto(pid, title, description, visibility) {
-    return await persistence.updatePhoto(pid, title, description, visibility);
+// THIS IS THE FIXED ONE — NOW ACCEPTS TAGS
+async function updatePhoto(pid, title, description, visibility, tags) {
+    return await persistence.updatePhoto(pid, title, description, visibility, tags);
 }
 
 async function addTag(pid, tag) {
@@ -49,10 +51,6 @@ async function close() {
 
 async function createAlbum(name, user) {
     return await persistence.createAlbum(name, user.ownerID);
-}
-
-async function addPhotoToAlbum(photoId, albumId) {
-    return await persistence.addPhotoToAlbum(photoId, albumId);
 }
 
 async function getCommentsForUserPhotos(ownerID) {
@@ -77,33 +75,6 @@ async function getCommentsForUserPhotos(ownerID) {
     return commentsForUser;
 }
 
-async function searchPhotos(query, user) {
-    const photos = await persistence.getAllPhotos();
-    const results = [];
-
-    for (let i = 0; i < photos.length; i++) {
-        const photo = photos[i];
-        if (photo.visibility !== 'private' || photo.ownerID === user.ownerID) {
-            let titleMatch = false;
-            if (photo.title && photo.title.toLowerCase().includes(query)) titleMatch = true;
-
-            let tagMatch = false;
-            if (photo.tags) {
-                for (let t = 0; t < photo.tags.length; t++) {
-                    if (photo.tags[t].toLowerCase().includes(query)) {
-                        tagMatch = true;
-                        break;
-                    }
-                }
-            }
-
-            if (titleMatch || tagMatch) results.push(photo);
-        }
-    }
-
-    return results;
-}
-
 async function uploadPhoto(photoData) {
     return await persistence.createPhoto(photoData);
 }
@@ -120,8 +91,6 @@ module.exports = {
     getComments,
     addComment,
     createAlbum,
-    addPhotoToAlbum,
     getCommentsForUserPhotos,
-    searchPhotos,
     uploadPhoto
 };

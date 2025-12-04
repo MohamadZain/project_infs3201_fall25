@@ -2,15 +2,13 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Photo Album</title>
+    <title>My Photo Albums</title>
     <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
 
 <header class="main-header">
-    <div class="header-left">
-        Logged in as {{user.username}}
-    </div>
+    <div class="header-left">Logged in as {{user.username}}</div>
     <div class="header-center">
         <form method="GET" action="/search" class="search-form">
             <input type="text" name="q" placeholder="Search photos by title, description, or tag">
@@ -19,36 +17,30 @@
     </div>
     <div class="header-right">
         <a href="/change-password" class="header-btn">Change Password</a>
+        <a href="/notifications" class="header-btn">Notifications</a>
         <a href="/logout" class="header-btn">Logout</a>
     </div>
 </header>
 
-<div class="photo-grid-container">
-    <!-- Album List -->
-    <ul class="album-list">
-        {{#each albums}}
-        <li>
-            <a href="/album/{{this.id}}">{{this.name}}</a>
-        </li>
-        {{/each}}
-    </ul>
+<div class="content-container">
+    <h2 style="text-align:center; margin:50px 0 30px;">Your Albums</h2>
 
-    <!-- Photo Grid (optional featured photos) -->
-    <div class="album-grid">
-        {{#each featuredPhotos}}
-        <div class="photo-card">
-            <a href="/photo-details/{{id}}">
-                <img src="/photos/{{filename}}" alt="{{title}}">
-            </a>
-            <p>{{title}}</p>
+    {{#if albums.length}}
+        <ul class="album-list">
+            {{#each albums}}
+                <li><a href="/album/{{this.id}}">{{this.name}}</a></li>
+            {{/each}}
+        </ul>
+    {{else}}
+        <div style="text-align:center; padding:100px; color:#666;">
+            <h3>No albums yet</h3>
+            <p>Albums are created automatically when you upload photos.</p>
         </div>
-        {{/each}}
-    </div>
+    {{/if}}
 </div>
 
 <div class="footer-bar">
-    Project by Umar Sadiq (60302575), Mohamed Zain (60306080), and Muhammad Ramadhan (60300872)
+    Project by Umar Sadiq (60302575), Mohamed Zain (60306080), Muhammad Ramadhan (60300872)
 </div>
-
 </body>
 </html>
